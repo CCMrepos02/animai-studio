@@ -995,11 +995,18 @@ async function generate() {
   const ps   = document.getElementById('progStep');
   btn.disabled=true; pw.style.display='block'; ra.style.display='none'; pf.style.width='0%';
 
-  const steps = [[15,'Analyzing image...','Detecting properties'],
-    [35,'Running AI pipeline...','Processing with local engine'],
-    [60,'Applying effects...','Rendering output'],
-    [82,'Encoding output...','Optimizing file'],
-    [95,'Finalizing...','Almost done']];
+  const isVideo = state.uploadedFile && /\.(mov|mp4|m4v|avi|mkv|webm|3gp)$/i.test(state.uploadedFile.name);
+  const steps = isVideo
+    ? [[20,'Extracting best frame from video...','ffmpeg I-frame detection'],
+       [40,'Converting frame to JPEG...','Building animation source'],
+       [60,'Applying animation style...','Rendering motion with ffmpeg'],
+       [82,'Encoding H.264 output...','Optimizing for playback'],
+       [95,'Finalizing...','Almost done']]
+    : [[15,'Analyzing image...','Detecting properties'],
+       [35,'Running AI pipeline...','Processing with local engine'],
+       [60,'Applying effects...','Rendering output'],
+       [82,'Encoding output...','Optimizing file'],
+       [95,'Finalizing...','Almost done']];
   let si=0; const iv=setInterval(()=>{ if(si<steps.length){pf.style.width=steps[si][0]+'%';pl.textContent=steps[si][1];ps.textContent=steps[si][2];si++;} },800);
 
   try {

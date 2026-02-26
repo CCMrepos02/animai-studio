@@ -277,40 +277,66 @@ class Handler(BaseHTTPRequestHandler):
 
     # ── /animate ─────────────────────────────────────────────────────────────
     def _animate(self, fields, files):
-        from PIL import Image
+        from PIL import Image, ImageOps
         def g(k, d=""): v=fields.get(k,d); return v if v else d
-        if "photo" not in files: return self._text("No photo",400)
+        if "photo" not in files: return self._text("No photo", 400)
 
-        raw = self._save(files["photo"])
-        # Always convert to JPEG so ffmpeg -loop 1 works regardless of
-        # input format (MOV, HEIC, PNG, WEBP, video frame, etc.)
-        src = tempfile.mktemp(suffix=".jpg", dir="/tmp")
-        try:
-            img = Image.open(raw).convert("RGB")
-            # Auto-orient from EXIF
-            try:
-                from PIL import ImageOps
-                img = ImageOps.exif_transpose(img)
-            except Exception:
-                pass
-            img.save(src, "JPEG", quality=95)
-        except Exception as e:
-            return self._text(f"Cannot decode image: {e}", 400)
-        finally:
-            try: os.unlink(raw)
-            except: pass
+        fname, fdata = files["photo"]
+        raw_ext = Path(fname).suffix.lower()
+        VIDEO_EXTS = {'.mov','.mp4','.m4v','.avi','.mkv','.webm','.3gp','.mts','.ts'}
 
-        out = None
+        raw  = self._save(files["photo"])
+        src  = tempfile.mktemp(suffix=".jpg", dir="/tmp")
+        out  = None
+
         try:
-            out = make_animation(src, g("style","kenburns"), g("duration","8"),
-                                 g("quality","medium"), g("format","mp4"),
-                                 g("grade","1"), g("vignette","1"), g("grain","0"), g("sharpen","1"))
+            if raw_ext in VIDEO_EXTS:
+                # ── Video upload: extract best frame (5% in to skip black) ──
+                r = subprocess.run([
+                    FFMPEG, "-y", "-i", raw,
+                    "-vf", "select='eq(pict_type\\,I)'",   # first I-frame
+                    "-vframes", "1", "-q:v", "2", src
+                ], capture_output=True, timeout=30)
+
+                if r.returncode != 0 or not os.path.exists(src) or os.path.getsize(src) < 100:
+                    # Fallback: grab frame at 0.5s
+                    r2 = subprocess.run([
+                        FFMPEG, "-y", "-ss", "0.5", "-i", raw,
+                        "-vframes", "1", "-q:v", "2", src
+                    ], capture_output=True, timeout=30)
+                    if r2.returncode != 0:
+                        return self._text(f"Could not extract frame from video: {r2.stderr[-300:]}", 400)
+
+                # Make sure PIL can clean it up
+                img = Image.open(src).convert("RGB")
+                try: img = ImageOps.exif_transpose(img)
+                except: pass
+                img.save(src, "JPEG", quality=95)
+                print(f"  Video → frame extracted: {img.size}")
+
+            else:
+                # ── Image upload (JPEG/PNG/HEIC/WEBP etc.) ────────────────
+                try:
+                    img = Image.open(raw).convert("RGB")
+                    try: img = ImageOps.exif_transpose(img)
+                    except: pass
+                    img.save(src, "JPEG", quality=95)
+                except Exception as e:
+                    return self._text(f"Cannot decode image ({raw_ext}): {e}", 400)
+
+            out = make_animation(
+                src,
+                g("style","kenburns"), g("duration","8"),
+                g("quality","medium"), g("format","mp4"),
+                g("grade","1"), g("vignette","1"), g("grain","0"), g("sharpen","1")
+            )
             name = f"anim-{g('style','kb')}-{int(time.time())}.mp4"
             self._persist(out, name)
             with open(out,"rb") as f: data = f.read()
-            self._binary(data,"video/mp4", name)
+            self._binary(data, "video/mp4", name)
+
         finally:
-            for p in [src, out]:
+            for p in [raw, src, out]:
                 if p:
                     try: os.unlink(p)
                     except: pass
