@@ -262,6 +262,19 @@ select{background:var(--card2);color:var(--text);cursor:pointer}
 .int-btn:hover{color:var(--text);border-color:var(--border2)}
 .int-btn.active{background:var(--glow2);border-color:var(--accent);color:var(--accent2)}
 
+/* ──── Skills tab ──── */
+.skill-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:9px 10px;cursor:pointer;transition:.2s;display:flex;align-items:flex-start;gap:8px}
+.skill-card:hover{background:var(--card2);border-color:var(--border2);transform:translateX(2px)}
+.skill-card.active{background:var(--glow2);border-color:var(--accent)}
+.sk-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.sk-info .sk-name{font-size:11px;font-weight:700;color:var(--text)}
+.skill-card.active .sk-name{color:var(--accent2)}
+.sk-info .sk-desc{font-size:10px;color:var(--text3);line-height:1.4;margin-top:2px}
+.sk-level{margin-left:auto;flex-shrink:0}
+.sk-dots{display:flex;gap:2px;margin-top:4px}
+.sk-dot{width:5px;height:5px;border-radius:50%;background:var(--border2)}
+.sk-dot.lit{background:var(--accent)}
+
 /* ──── Style cards (animation) ──── */
 .anim-scroll{display:flex;flex-direction:column;gap:4px}
 .anim-item{display:flex;align-items:center;gap:8px;padding:7px 8px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;cursor:pointer;transition:.15s}
@@ -354,6 +367,7 @@ select{background:var(--card2);color:var(--text);cursor:pointer}
       <div class="lp-tab active" onclick="lpTab(this,'media')" title="Media">MEDIA</div>
       <div class="lp-tab" onclick="lpTab(this,'tools')" title="AI Tools">AI</div>
       <div class="lp-tab" onclick="lpTab(this,'fx')" title="Effects">FX</div>
+      <div class="lp-tab" onclick="lpTab(this,'skills')" title="Skills">SKILLS</div>
       <div class="lp-tab" onclick="lpTab(this,'projects')" title="Projects">FILES</div>
     </div>
     <div class="lp-content">
@@ -396,6 +410,22 @@ select{background:var(--card2);color:var(--text);cursor:pointer}
         <div class="anim-scroll" id="animList"></div>
       </div>
 
+      <!-- SKILLS TAB -->
+      <div id="lp-skills" class="lp-pane" style="display:none">
+        <div style="background:linear-gradient(135deg,rgba(124,92,252,.15),rgba(91,141,239,.1));border:1px solid rgba(124,92,252,.3);border-radius:10px;padding:12px;margin-bottom:12px">
+          <div style="font-size:11px;font-weight:800;color:var(--accent2);margin-bottom:5px;display:flex;align-items:center;gap:6px">
+            <span style="font-size:16px">⚡</span> AI Skills Engine
+          </div>
+          <div style="font-size:10px;color:var(--text2);line-height:1.7">Streamline video production via intelligent AI tools. Boost productivity, transform workflow.</div>
+        </div>
+        <div class="lp-section-title">Core Skills</div>
+        <div style="display:flex;flex-direction:column;gap:6px" id="skillsList"></div>
+        <div style="margin-top:12px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px">
+          <div style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Why AnimAI</div>
+          <div style="font-size:10px;color:var(--text3);line-height:1.8">✦ Let advanced tech handle complex editing<br>✦ Focus on the essentials<br>✦ Effortless professional results<br>✦ 100% local — no cloud needed<br>✦ Your data never leaves your Mac</div>
+        </div>
+      </div>
+
       <!-- FILES TAB -->
       <div id="lp-projects" class="lp-pane" style="display:none">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -418,6 +448,7 @@ select{background:var(--card2);color:var(--text);cursor:pointer}
         <div class="pt-ratio" onclick="setRatio('1:1',this)">1:1</div>
         <div class="pt-ratio" onclick="setRatio('9:16',this)">9:16</div>
         <div class="pt-ratio" onclick="setRatio('4:3',this)">4:3</div>
+        <div class="pt-ratio" onclick="setRatio('8:5',this)" style="color:var(--gold)" title="8×5 inch photo print">📸 8×5"</div>
       </div>
       <div class="pt-right">
         <span class="pt-zoom" id="zoomLabel">Fit</span>
@@ -582,9 +613,36 @@ const GRADE_PRESETS = [
   {id:'pastel',      name:'Pastel',    cls:'gs-pastel'},
 ];
 
+// ─── Skills data ─────────────────────────────────────────────────────────────
+const SKILLS = [
+  {icon:'🎬', name:'Photo Animator',     desc:'Cinematic Ken Burns, Baywatch, 12 styles',        level:5, tool:'animator'},
+  {icon:'🔄', name:'Face Swap',          desc:'AI face transplant with InsightFace precision',    level:5, tool:'faceswap'},
+  {icon:'📰', name:'Magazine Covers',    desc:'Vogue, SI, Maxim, Rolling Stone, Forbes',          level:5, tool:'magazine'},
+  {icon:'🖼️', name:'Background Swap',    desc:'Remove & replace with 10 cinematic backdrops',    level:4, tool:'bgswap'},
+  {icon:'💆', name:'AI Retouch',         desc:'6-step editorial skin & color pipeline',           level:4, tool:'retouch'},
+  {icon:'🎨', name:'Color Grading',      desc:'10 cinematic presets — Moody, Warm, Night...',    level:5, tool:'grade'},
+  {icon:'📐', name:'Resize & Convert',   desc:'Any dimension — print-ready, web, social',        level:5, tool:'resize'},
+  {icon:'📹', name:'Video Export',       desc:'YouTube 1080p, Shorts, TikTok, Instagram',        level:4, tool:'animator'},
+];
+
+function buildSkillsList() {
+  const el = document.getElementById('skillsList');
+  if(!el) return;
+  el.innerHTML = SKILLS.map(s => `
+    <div class="skill-card" onclick="selectTool('${s.tool}',null)">
+      <div class="sk-icon">${s.icon}</div>
+      <div class="sk-info">
+        <div class="sk-name">${s.name}</div>
+        <div class="sk-desc">${s.desc}</div>
+        <div class="sk-dots">${Array.from({length:5},(_,i)=>`<div class="sk-dot${i<s.level?' lit':''}"></div>`).join('')}</div>
+      </div>
+    </div>`).join('');
+}
+
 // ─── Init ─────────────────────────────────────────────────────────────────────
 window.onload = () => {
   buildAnimList();
+  buildSkillsList();
   renderTool('animator');
   buildRuler();
   checkServer();
@@ -736,9 +794,10 @@ function buildPanel(tool) {
 
   if(tool==='resize') {
     const presets = [
-      {label:'YouTube',w:1920,h:1080},{label:'Shorts',w:1080,h:1920},
-      {label:'Instagram',w:1080,h:1080},{label:'Twitter',w:1200,h:675},
-      {label:'4K',w:3840,h:2160},{label:'HD',w:1280,h:720},
+      {label:'8×5" Print',w:2400,h:1500},{label:'4×6" Print',w:1800,h:1200},
+      {label:'5×7" Print',w:2100,h:1500},{label:'YouTube',w:1920,h:1080},
+      {label:'Shorts',w:1080,h:1920},{label:'Instagram',w:1080,h:1080},
+      {label:'Twitter',w:1200,h:675},{label:'4K',w:3840,h:2160},
     ];
     return `
     ${uploadZone}
