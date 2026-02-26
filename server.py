@@ -12,7 +12,43 @@ FFMPEG  = "/opt/homebrew/bin/ffmpeg"
 VENV_PY = "/Users/cm/Documents/felix-v2/SadTalker/venv_sadtalker/bin/python3"
 INSWAP  = "/Users/cm/Documents/felix-v2/julia-project/models/inswapper_128.onnx"
 OUTPUT  = os.path.expanduser("~/Desktop/photo-animator/output")
+MUSIC_DIR = os.path.expanduser("~/Desktop/photo-animator/music")
 os.makedirs(OUTPUT, exist_ok=True)
+os.makedirs(MUSIC_DIR, exist_ok=True)
+
+# ─── Music Library (ANIMA / RÜFÜS / ODESZA atmospheric synth tracks) ─────────
+MUSIC_TRACKS = {
+    "anima_atmos":    {"name":"ANIMA Atmos",    "desc":"Deep atmospheric drone",    "color":"#120038", "icon":"🌫"},
+    "rufus_warm":     {"name":"RÜFÜS Warm",      "desc":"Desert warm pad",           "color":"#2a1000", "icon":"🌅"},
+    "odesza_cascade": {"name":"ODESZA Cascade",  "desc":"Bright cascading sweep",    "color":"#001828", "icon":"🏔"},
+    "gravity_float":  {"name":"Gravity Float",   "desc":"Slow-fall ambient texture", "color":"#001818", "icon":"🍃"},
+    "tension_drone":  {"name":"Tension Drone",   "desc":"Pre-drop dissonant creep",  "color":"#08080e", "icon":"⚡"},
+    "drop_pulse":     {"name":"Drop Pulse",      "desc":"Bass pulse at the drop",    "color":"#1a0010", "icon":"💥"},
+}
+# expr, lowpass_hz, aecho_params, volume
+MUSIC_EXPRS = {
+    "anima_atmos":    ("0.3*sin(2*PI*55*t)+0.15*sin(2*PI*110*t)+0.1*sin(2*PI*82.5*t)",     800,  "0.8:0.88:60:0.4",  0.50),
+    "rufus_warm":     ("0.3*sin(2*PI*110*t)+0.2*sin(2*PI*165*t)+0.1*sin(2*PI*220*t)",      1400, "0.7:0.85:80:0.4",  0.45),
+    "odesza_cascade": ("0.25*sin(2*PI*220*t)+0.2*sin(2*PI*330*t)+0.15*sin(2*PI*440*t)",    3000, "0.8:0.9:120:0.5",  0.45),
+    "gravity_float":  ("0.3*sin(2*PI*40*t)+0.2*sin(2*PI*55*t)+0.1*sin(2*PI*80*t)",         600,  "0.9:0.92:100:0.5", 0.40),
+    "tension_drone":  ("0.3*sin(2*PI*73.4*t)+0.2*sin(2*PI*77.8*t)+0.1*sin(2*PI*146.8*t)", 500,  "0.6:0.8:50:0.3",   0.40),
+    "drop_pulse":     ("0.4*sin(2*PI*55*t)+0.2*sin(2*PI*110*t)",                            400,  "0.5:0.7:40:0.2",   0.55),
+}
+
+def ensure_music_tracks():
+    """Generate atmospheric ambient tracks at startup if not present."""
+    for tid, (expr, lpf, echo, vol) in MUSIC_EXPRS.items():
+        out_path = os.path.join(MUSIC_DIR, f"{tid}.m4a")
+        if not os.path.exists(out_path):
+            try:
+                cmd = [FFMPEG, "-y", "-f", "lavfi",
+                       "-i", f"aevalsrc={expr}:s=44100:d=60",
+                       "-af", f"aecho={echo},lowpass=f={lpf},volume={vol}",
+                       "-c:a", "aac", "-b:a", "128k", out_path]
+                subprocess.run(cmd, capture_output=True, timeout=60)
+                print(f"  ♪ Generated: {tid}.m4a")
+            except Exception as e:
+                print(f"  ✗ Music gen failed for {tid}: {e}")
 
 QUALITY_MAP = {
     "high":"1920x1080","medium":"1280x720","low":"854x480",
@@ -34,7 +70,7 @@ def get_face_tools():
     return _face_app, _face_swapper
 
 # ─── Video effects engine (applies templates to actual video) ────────────────
-def make_video_animation(src, style, quality, fmt, grade, vignette, grain, sharpen):
+def make_video_animation(src, style, quality, fmt, grade, vignette, grain, sharpen, music_track="none", music_vol=0.35):
     """Apply cinematic template to a real video — preserves motion + audio."""
     out = tempfile.mktemp(suffix=".mp4", dir="/tmp")
 
@@ -103,10 +139,36 @@ def make_video_animation(src, style, quality, fmt, grade, vignette, grain, sharp
 
     yt_enc = fmt in ("youtube","ytshorts")
     enc = ["-b:v","6000k","-maxrate","8000k","-bufsize","16000k","-profile:v","high","-level","4.1"] if yt_enc else ["-crf","20"]
-    cmd = [FFMPEG, "-y", "-i", src,
-           "-vf", full_vf, "-c:v", "libx264", "-preset", "fast"] + enc + [
-           "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", out]
-    r = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+
+    music_path = os.path.join(MUSIC_DIR, f"{music_track}.m4a") if music_track and music_track != "none" else None
+    use_music  = music_path and os.path.isfile(music_path)
+
+    if use_music:
+        # Loop music to video length, mix at music_vol; keep original audio via amix
+        cmd = [FFMPEG, "-y", "-i", src,
+               "-stream_loop", "-1", "-i", music_path,
+               "-vf", full_vf,
+               "-filter_complex",
+               f"[0:a]volume=1.0[orig];[1:a]volume={music_vol}[mus];[orig][mus]amix=inputs=2:duration=first:dropout_transition=2[aout]",
+               "-map", "0:v", "-map", "[aout]",
+               "-c:v", "libx264", "-preset", "fast"] + enc + [
+               "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", "-shortest", out]
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+        if r.returncode != 0:
+            # Fallback: source may have no audio — replace with music only
+            cmd = [FFMPEG, "-y", "-i", src,
+                   "-stream_loop", "-1", "-i", music_path,
+                   "-vf", full_vf,
+                   "-map", "0:v", "-map", "1:a",
+                   "-c:v", "libx264", "-preset", "fast"] + enc + [
+                   "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", "-shortest", out]
+            r = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+    else:
+        cmd = [FFMPEG, "-y", "-i", src,
+               "-vf", full_vf, "-c:v", "libx264", "-preset", "fast"] + enc + [
+               "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", out]
+        r = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+
     if r.returncode != 0: raise RuntimeError(r.stderr[-800:])
     return out
 
@@ -250,6 +312,19 @@ class Handler(BaseHTTPRequestHandler):
                 mime = mimetypes.guess_type(fpath)[0] or "application/octet-stream"
                 return self._serve_file(fpath, mime, download=True)
             return self._text("Not found", 404)
+        if p == "/music":
+            tracks = []
+            for tid, info in MUSIC_TRACKS.items():
+                fp = os.path.join(MUSIC_DIR, f"{tid}.m4a")
+                tracks.append({**info, "id": tid, "ready": os.path.isfile(fp),
+                                "url": f"/music/{tid}.m4a"})
+            return self._json(tracks)
+        if p.startswith("/music/"):
+            fname = p[7:]
+            fpath = os.path.join(MUSIC_DIR, fname)
+            if os.path.isfile(fpath):
+                return self._serve_file(fpath, "audio/mp4")
+            return self._text("Not found", 404)
         self._text("AnimAI v2", 200)
 
     # ── POST ─────────────────────────────────────────────────────────────────
@@ -386,7 +461,9 @@ class Handler(BaseHTTPRequestHandler):
                     g("style","kenburns"),  g("quality","medium"),
                     g("format","mp4"),
                     g("grade","1"),          g("vignette","1"),
-                    g("grain","0"),          g("sharpen","1")
+                    g("grain","0"),          g("sharpen","1"),
+                    music_track=g("music","none"),
+                    music_vol=float(g("music_vol","0.35"))
                 )
             else:
                 # ══ PHOTO PATH: decode image → animate as looping video ═══
@@ -731,4 +808,6 @@ if __name__ == "__main__":
 ║   http://localhost:7474                  ║
 ║   Output: ~/Desktop/photo-animator/output║
 ╚══════════════════════════════════════════╝""")
+    print("♪ Generating music library...")
+    ensure_music_tracks()
     HTTPServer(("", 7474), Handler).serve_forever()

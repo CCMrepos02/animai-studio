@@ -373,6 +373,17 @@ select{background:var(--card2);color:var(--text);cursor:pointer}
 .d-db{background:radial-gradient(circle at 50% 50%,#fffbe8 0%,#f0c060 20%,#c08020 50%,#1a0a00 100%);animation:db 3s ease-in-out infinite alternate}
 @keyframes db{from{transform:scale(1);filter:brightness(0.7)}to{transform:scale(1.2);filter:brightness(1.6)}}
 
+/* ──── Music tracks ──── */
+.music-tracks{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto}
+.music-track{display:flex;align-items:center;gap:8px;padding:7px 8px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;cursor:pointer;transition:.15s;min-height:40px}
+.music-track:hover{background:var(--card2);border-color:var(--border2)}
+.music-track.mt-active{background:var(--glow2);border-color:var(--accent)}
+.mt-icon{font-size:16px;flex-shrink:0;width:22px;text-align:center}
+.mt-info .mt-name{font-size:11px;font-weight:700;color:var(--text)}
+.mt-info .mt-desc{font-size:9px;color:var(--text3)}
+.mt-play{margin-left:auto;font-size:12px;opacity:.5;cursor:pointer;flex-shrink:0}
+.mt-play:hover{opacity:1}
+.music-track.mt-active .mt-name{color:var(--accent2)}
 /* Settings view */
 .settings-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
 .settings-row:last-child{border-bottom:none}
@@ -620,11 +631,13 @@ const state = {
   currentTime: 0,
   faceSourceFile: null,
   faceTargetFile: null,
+  selectedMusic: 'none',
+  musicVol: 0.35,
 };
 
 // ─── Tool definitions ─────────────────────────────────────────────────────────
 const TOOLS = {
-  animator: {title:'🎬 Photo Animator', sub:'Animate any photo with AI', btn:'🚀 Generate Animation'},
+  animator: {title:'🎬 Photo & Video Studio', sub:'Animate photos or stylize videos with music', btn:'🚀 Generate'},
   faceswap: {title:'🔄 Face Swap',       sub:'Swap faces with AI precision', btn:'🔄 Swap Faces'},
   magazine: {title:'📰 Magazine Cover',  sub:'Create professional magazine covers', btn:'📰 Generate Cover'},
   bgswap:   {title:'🖼️ Background Swap', sub:'Remove & replace backgrounds', btn:'🖼️ Swap Background'},
@@ -751,6 +764,7 @@ window.onload = () => {
   checkServer();
   setInterval(checkServer, 5000);
   loadFiles();
+  loadMusicTracks();
 };
 
 // ─── Left Panel Tabs ──────────────────────────────────────────────────────────
@@ -828,6 +842,25 @@ function buildPanel(tool) {
         <div class="tog on" id="tog-vig"     onclick="this.classList.toggle('on')"><div class="td"></div>Vignette</div>
         <div class="tog on" id="tog-sharp"   onclick="this.classList.toggle('on')"><div class="td"></div>Sharpen</div>
         <div class="tog"    id="tog-grain"   onclick="this.classList.toggle('on')"><div class="td"></div>Grain</div>
+      </div>
+    </div>
+    <div class="rp-field">
+      <label style="display:flex;align-items:center;justify-content:space-between">
+        <span>🎵 Music Track</span>
+        <span style="font-size:9px;color:var(--text3);font-weight:400">Video only — auto-mixed</span>
+      </label>
+      <div class="music-tracks" id="musicTrackList">
+        <div class="music-track${state.selectedMusic==='none'?' mt-active':''}" onclick="selMusic('none',this)">
+          <div class="mt-icon">🔇</div><div class="mt-info"><div class="mt-name">No Music</div><div class="mt-desc">Original audio</div></div>
+        </div>
+        <div style="text-align:center;font-size:10px;color:var(--text3);padding:8px 0" id="mtLoading">Loading tracks...</div>
+      </div>
+      <div class="rp-field" style="padding:4px 0 0">
+        <div style="display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text3)">
+          <span>Vol</span>
+          <input type="range" min="0" max="1" step="0.05" value="0.35" id="musicVolSlider" style="flex:1;height:3px;accent-color:var(--accent)" oninput="state.musicVol=parseFloat(this.value);document.getElementById('musicVolVal').textContent=Math.round(this.value*100)+'%'">
+          <span id="musicVolVal">35%</span>
+        </div>
       </div>
     </div>`;
 
@@ -969,6 +1002,38 @@ function selStyle(id,el){ state.selectedStyle=id; document.querySelectorAll('#rp
 function selStyleFx(id,el){ state.selectedStyle=id; document.querySelectorAll('#animList .anim-item').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
 function selMag(id,el){ state.selectedMagTemplate=id; document.querySelectorAll('.mag-card').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
 function selBg(id,el){ state.selectedBg=id; document.querySelectorAll('.bg-swatch').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
+function selMusic(id,el){
+  state.selectedMusic=id;
+  document.querySelectorAll('#musicTrackList .music-track').forEach(x=>x.classList.remove('mt-active'));
+  el.classList.add('mt-active');
+  // Stop any playing preview
+  if(window._mtAudio){ window._mtAudio.pause(); window._mtAudio=null; }
+}
+function previewTrack(id,ev){
+  ev.stopPropagation();
+  if(window._mtAudio){ window._mtAudio.pause(); window._mtAudio=null; }
+  const a=new Audio(`http://localhost:7474/music/${id}.m4a`);
+  a.volume=0.5; a.play(); window._mtAudio=a;
+  setTimeout(()=>{ if(window._mtAudio===a){ a.pause(); window._mtAudio=null; } },8000);
+}
+async function loadMusicTracks(){
+  try {
+    const tracks=await fetch('http://localhost:7474/music').then(r=>r.json());
+    const list=document.getElementById('musicTrackList');
+    if(!list) return;
+    const loading=document.getElementById('mtLoading');
+    if(loading) loading.remove();
+    tracks.forEach(t=>{
+      if(!t.ready) return;
+      const d=document.createElement('div');
+      d.className='music-track'; d.onclick=function(){ selMusic(t.id,this); };
+      d.innerHTML=`<div class="mt-icon">${t.icon||'🎵'}</div>
+        <div class="mt-info"><div class="mt-name">${t.name}</div><div class="mt-desc">${t.desc}</div></div>
+        <div class="mt-play" onclick="previewTrack('${t.id}',event)" title="Preview 8s">▶</div>`;
+      list.appendChild(d);
+    });
+  } catch(e){ const l=document.getElementById('mtLoading'); if(l) l.textContent='Server offline'; }
+}
 function selGrade(id,el){ state.selectedGrade=id; document.querySelectorAll('.grade-swatch').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
 function selInt(v,el){ state.selectedIntensity=v; document.querySelectorAll('.int-btn').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
 function setSize(w,h,el){ state.resizeW=w; state.resizeH=h; const rw=document.getElementById('resW'),rh=document.getElementById('resH'); if(rw)rw.value=w; if(rh)rh.value=h; document.querySelectorAll('.size-pill').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
@@ -1065,6 +1130,8 @@ async function generate() {
         fd.append('vignette',document.getElementById('tog-vig')?.classList.contains('on')?'1':'0');
         fd.append('grain',   document.getElementById('tog-grain')?.classList.contains('on')?'1':'0');
         fd.append('sharpen', document.getElementById('tog-sharp')?.classList.contains('on')?'1':'0');
+        fd.append('music',   state.selectedMusic||'none');
+        fd.append('music_vol', String(state.musicVol||0.35));
         state.resultMime='video/mp4';
       } else if(tool==='magazine'){
         endpoint='/magazine'; fd.append('template',state.selectedMagTemplate); state.resultMime='image/jpeg';
@@ -1097,6 +1164,12 @@ async function generate() {
       if(state.resultMime==='video/mp4'){
         rw.innerHTML=`<video src="${state.resultURL}" controls autoplay loop muted style="width:100%;border-radius:8px"></video>`;
         addToTimeline(null, 'result', state.selectedStyle);
+        // ── Update center canvas preview with result video ──
+        const cv=document.getElementById('preview-video');
+        const ci=document.getElementById('preview-media');
+        cv.src=state.resultURL; cv.style.display='block'; cv.muted=false;
+        ci.style.display='none';
+        document.getElementById('canvasPlaceholder').style.display='none';
       } else {
         rw.innerHTML=`<img src="${state.resultURL}" style="width:100%;border-radius:8px">`;
         // Update canvas preview
