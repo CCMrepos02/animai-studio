@@ -287,7 +287,7 @@ select{background:var(--card2);color:var(--text);cursor:pointer}
 .ai-info .ai-desc{font-size:9px;color:var(--text3)}
 .ai-badge{margin-left:auto;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:700}
 
-/* animation preview styles */
+/* ── animation preview styles — all 30 ── */
 .d-kb{background:linear-gradient(135deg,#1a1040,#4c1d95,#7c3aed);animation:kb 5s ease-in-out infinite alternate}
 @keyframes kb{from{transform:scale(1)}to{transform:scale(1.25) translate(-3%,-4%)}}
 .d-bw{background:linear-gradient(135deg,#7f1d1d,#dc2626,#f97316);animation:bw 4s ease-in-out infinite alternate}
@@ -312,6 +312,43 @@ select{background:var(--card2);color:var(--text);cursor:pointer}
 @keyframes wr{from{clip-path:inset(0 70% 0 0)}to{clip-path:inset(0 0 0 0)}}
 .d-np{background:#070713;animation:np 1.8s ease-in-out infinite}
 @keyframes np{0%,100%{box-shadow:inset 0 0 30px #7c3aed}50%{box-shadow:inset 0 0 70px #a855f7,inset 0 0 20px #e879f9}}
+/* New 18 */
+.d-pa{background:linear-gradient(135deg,#1a0a2e,#5a1a8e,#1a0a2e);animation:pa 4s ease-in-out infinite alternate}
+@keyframes pa{from{transform:translateX(-14%) scale(1.1)}to{transform:translateX(14%) scale(1.1)}}
+.d-mx{background:linear-gradient(180deg,#001200,#002800,#004000);animation:mx 1.5s steps(3) infinite}
+@keyframes mx{0%{filter:hue-rotate(0) brightness(.8)}50%{filter:hue-rotate(120deg) brightness(1.1)}100%{filter:hue-rotate(240deg) brightness(.9)}}
+.d-bk{background:radial-gradient(circle,#fff5e0 0%,#4a3000 50%,#1a0800 100%);animation:bk 4s ease-in-out infinite}
+@keyframes bk{0%,100%{filter:blur(0) brightness(1)}50%{filter:blur(4px) brightness(1.6)}}
+.d-ho{background:conic-gradient(#ff0080,#7928ca,#0070f3,#00dfd8,#ff0080);animation:ho 2.5s linear infinite}
+@keyframes ho{from{transform:rotate(0) scale(1.5)}to{transform:rotate(360deg) scale(1.5)}}
+.d-dn{background:linear-gradient(135deg,#1a2a3a,#2a4a6a,#4a7aaa);animation:dn 5s ease-in-out infinite alternate}
+@keyframes dn{from{transform:scale(1.45)}to{transform:scale(1.0)}}
+.d-tl{background:linear-gradient(135deg,#080818,#183868);animation:tl 1.2s ease-in-out infinite}
+@keyframes tl{from{transform:scale(1)}to{transform:scale(1.4)}}
+.d-nr{background:linear-gradient(135deg,#050505,#181818);animation:nr 6s ease-in-out infinite alternate;filter:contrast(2) saturate(0)}
+@keyframes nr{from{transform:scale(1)}to{transform:scale(1.12) translate(2%,-1%)}}
+.d-ch{background:linear-gradient(135deg,#200030,#400060);animation:ch 0.25s steps(1) infinite}
+@keyframes ch{0%{box-shadow:none}33%{box-shadow:-5px 0 0 rgba(255,0,0,.8),5px 0 0 rgba(0,0,255,.8)}66%{box-shadow:5px 0 0 rgba(255,0,0,.6),-5px 0 0 rgba(0,255,0,.6)}}
+.d-vh{background:repeating-linear-gradient(0deg,#08080e,#08080e 2px,#0c0c14 2px,#0c0c14 4px);animation:vh .35s steps(2) infinite}
+@keyframes vh{0%{transform:translateX(0) translateY(0);filter:saturate(0) brightness(.75)}50%{transform:translateX(-3px) translateY(2px);filter:saturate(.2) brightness(.8) hue-rotate(15deg)}}
+.d-sf{background:radial-gradient(circle at 50% 50%,#ffffff 0%,#8ab0ff 1%,#08102a 15%,#020408 100%);animation:sf 2.5s ease-in infinite alternate}
+@keyframes sf{from{transform:scale(1)}to{transform:scale(1.6)}}
+.d-fs{background:linear-gradient(180deg,#1a0000,#8a1000,#ff4000,#ffaa00);animation:fs 2s ease-in-out infinite}
+@keyframes fs{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-9px) scale(1.06)}}
+.d-ic{background:linear-gradient(135deg,#001a2a,#003a5a,#b0e0ff);animation:ic 4s ease-in-out infinite alternate}
+@keyframes ic{from{transform:scale(1.18) rotate(-1.5deg)}to{transform:scale(1.0) rotate(1.5deg)}}
+.d-sr{background:linear-gradient(180deg,#0a0520,#c06000,#ffcc00,#ffe080);animation:sr 4s ease-in-out infinite alternate}
+@keyframes sr{from{filter:brightness(.55)}to{filter:brightness(1.45)}}
+.d-eq{background:linear-gradient(135deg,#1a1010,#3a2010);animation:eq .18s ease-in-out infinite}
+@keyframes eq{0%,100%{transform:translate(0,0)}25%{transform:translate(-4px,3px)}50%{transform:translate(3px,-2px)}75%{transform:translate(-2px,4px)}}
+.d-lq{background:linear-gradient(135deg,#001a3a,#0050c0,#003080);animation:lq 3s ease-in-out infinite}
+@keyframes lq{0%,100%{transform:scale(1.1) skewX(0)}50%{transform:scale(1.15) skewX(3deg)}}
+.d-ts{background:linear-gradient(135deg,#1a3a1a,#3a6a3a,#5aaa5a);animation:ts 4s ease-in-out infinite alternate}
+@keyframes ts{from{transform:scale(1.22)}to{transform:scale(1.05)}}
+.d-lb{background:linear-gradient(135deg,#0a0a14,#1a1a28);animation:lb 5s ease-in-out infinite alternate}
+@keyframes lb{from{transform:scale(1) translateY(0)}to{transform:scale(1.14) translateY(-5%)}}
+.d-sp{background:linear-gradient(90deg,#1a0030,#200050,#001a40);animation:sp 3s ease-in-out infinite}
+@keyframes sp{0%,100%{clip-path:inset(0 55% 0 55%)}50%{clip-path:inset(0 0 0 0)}}
 
 /* Settings view */
 .settings-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
@@ -458,11 +495,21 @@ select{background:var(--card2);color:var(--text);cursor:pointer}
 
     <div class="preview-stage" id="previewStage">
       <div class="canvas-frame" id="canvasFrame" style="width:640px;height:360px">
-        <div class="canvas-placeholder" id="canvasPlaceholder" onclick="document.getElementById('canvas-file-input').click()">
+        <div class="canvas-placeholder" id="canvasPlaceholder">
           <input type="file" id="canvas-file-input" accept="image/*,video/*" onchange="handleMainUpload(this)">
-          <div class="cp-icon">🎬</div>
-          <p>Drop a photo or video<br>to get started</p>
-          <div class="cp-btn">Import Media</div>
+          <div style="text-align:center;padding:0 20px;max-width:520px">
+            <div style="font-size:32px;margin-bottom:10px">✨</div>
+            <div style="font-size:16px;font-weight:800;background:linear-gradient(90deg,var(--accent2),var(--a3));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px">Streamline Video Production</div>
+            <div style="font-size:12px;color:var(--text3);line-height:1.7;margin-bottom:16px">Intelligent AI tools · Boost productivity · Transform workflow<br>Let advanced tech handle complex editing — you focus on vision</div>
+            <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:16px">
+              <span style="background:var(--glow2);border:1px solid var(--accent);border-radius:4px;padding:3px 9px;font-size:10px;font-weight:700;color:var(--accent2)">30 Templates</span>
+              <span style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:4px;padding:3px 9px;font-size:10px;font-weight:700;color:var(--green)">100% Local</span>
+              <span style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:4px;padding:3px 9px;font-size:10px;font-weight:700;color:var(--gold)">8 AI Tools</span>
+              <span style="background:rgba(91,141,239,.1);border:1px solid rgba(91,141,239,.3);border-radius:4px;padding:3px 9px;font-size:10px;font-weight:700;color:var(--a3)">GitHub Open Source</span>
+            </div>
+            <div class="cp-btn" onclick="document.getElementById('canvas-file-input').click()" style="display:inline-flex;align-items:center;gap:8px">📸 Import Photo or Video</div>
+            <div style="margin-top:10px;font-size:10px;color:var(--text3)">or drag & drop anywhere on the canvas</div>
+          </div>
         </div>
         <img id="preview-media" style="display:none;width:100%;height:100%;object-fit:contain" alt="">
         <video id="preview-video" style="display:none;width:100%;height:100%;object-fit:contain" loop muted></video>
@@ -565,18 +612,38 @@ const TOOLS = {
 };
 
 const ANIMS = [
-  {id:'kenburns',name:'Ken Burns',     desc:'Slow zoom + drift',      cls:'d-kb',badge:'HOT',  bc:'badge-hot'},
-  {id:'baywatch',name:'Baywatch',      desc:'Pull back reveal',       cls:'d-bw',badge:'HOT',  bc:'badge-hot'},
-  {id:'drift',   name:'Cinematic Drift',desc:'Smooth side pan',       cls:'d-dr',badge:null},
-  {id:'pulse',   name:'Heartbeat',     desc:'Breathing pulse',        cls:'d-hb',badge:null},
-  {id:'zoom',    name:'Hypno Zoom',    desc:'Constant slow zoom',     cls:'d-hz',badge:null},
-  {id:'float',   name:'Float',         desc:'Gentle up/down float',   cls:'d-fl',badge:'NEW',  bc:'badge-new'},
-  {id:'cinema',  name:'Cinema Push',   desc:'Dramatic push + lift',   cls:'d-cp',badge:'PRO',  bc:'badge-pro'},
-  {id:'warmglow',name:'Golden Glow',   desc:'Warm sunset pulse',      cls:'d-gg',badge:null},
-  {id:'glitch',  name:'Glitch Art',    desc:'Digital glitch effect',  cls:'d-gl',badge:null},
-  {id:'vortex',  name:'Vortex Spin',   desc:'Hypnotic rotation',      cls:'d-vx',badge:'NEW',  bc:'badge-new'},
-  {id:'reveal',  name:'Wipe Reveal',   desc:'Cinematic slide reveal', cls:'d-wr',badge:null},
-  {id:'neon',    name:'Neon Pulse',    desc:'Electric neon glow',     cls:'d-np',badge:null},
+  // ── Original 12 ──────────────────────────────────────────────────────────
+  {id:'kenburns',  name:'Ken Burns',       desc:'Slow zoom + drift',          cls:'d-kb', badge:'HOT',  bc:'badge-hot'},
+  {id:'baywatch',  name:'Baywatch',        desc:'Pull back reveal',            cls:'d-bw', badge:'HOT',  bc:'badge-hot'},
+  {id:'drift',     name:'Cinematic Drift', desc:'Smooth side pan',             cls:'d-dr', badge:null},
+  {id:'pulse',     name:'Heartbeat',       desc:'Breathing pulse',             cls:'d-hb', badge:null},
+  {id:'zoom',      name:'Hypno Zoom',      desc:'Constant slow zoom',          cls:'d-hz', badge:null},
+  {id:'float',     name:'Float',           desc:'Gentle up/down float',        cls:'d-fl', badge:'NEW',  bc:'badge-new'},
+  {id:'cinema',    name:'Cinema Push',     desc:'Dramatic push + lift',        cls:'d-cp', badge:'PRO',  bc:'badge-pro'},
+  {id:'warmglow',  name:'Golden Glow',     desc:'Warm sunset pulse',           cls:'d-gg', badge:null},
+  {id:'glitch',    name:'Glitch Art',      desc:'Digital glitch effect',       cls:'d-gl', badge:null},
+  {id:'vortex',    name:'Vortex Spin',     desc:'Hypnotic rotation',           cls:'d-vx', badge:'NEW',  bc:'badge-new'},
+  {id:'reveal',    name:'Wipe Reveal',     desc:'Cinematic slide reveal',      cls:'d-wr', badge:null},
+  {id:'neon',      name:'Neon Pulse',      desc:'Electric neon glow',          cls:'d-np', badge:null},
+  // ── New 18 ───────────────────────────────────────────────────────────────
+  {id:'parallax',  name:'Parallax',        desc:'Side-to-side depth layer',    cls:'d-pa', badge:'NEW',  bc:'badge-new'},
+  {id:'matrix',    name:'Matrix Rain',     desc:'Green digital hue + zoom',    cls:'d-mx', badge:null},
+  {id:'bokeh',     name:'Bokeh Dreams',    desc:'Soft focus bloom pulse',      cls:'d-bk', badge:null},
+  {id:'holographic',name:'Holographic',   desc:'Iridescent hue shift loop',   cls:'d-ho', badge:'HOT',  bc:'badge-hot'},
+  {id:'drone',     name:'Drone Shot',      desc:'Top-down pullback reveal',    cls:'d-dn', badge:null},
+  {id:'timelapse', name:'Timelapse Rush',  desc:'Speed-ramped fast zoom',      cls:'d-tl', badge:null},
+  {id:'noir',      name:'Film Noir',       desc:'High contrast B&W drama',     cls:'d-nr', badge:'PRO',  bc:'badge-pro'},
+  {id:'chromatic', name:'Chromatic Split', desc:'RGB channel aberration',      cls:'d-ch', badge:null},
+  {id:'vhs',       name:'Retro VHS',       desc:'Scanlines + color bleed',     cls:'d-vh', badge:null},
+  {id:'starfield', name:'Starfield Zoom',  desc:'Fly through the stars',       cls:'d-sf', badge:'NEW',  bc:'badge-new'},
+  {id:'firestorm', name:'Fire Storm',      desc:'Warm turbulent movement',     cls:'d-fs', badge:null},
+  {id:'icecrystal',name:'Ice Crystal',     desc:'Cold sharp zoom + tilt',      cls:'d-ic', badge:null},
+  {id:'sunrise',   name:'Sunrise',         desc:'Gentle brightening sweep',    cls:'d-sr', badge:null},
+  {id:'earthquake',name:'Earthquake',      desc:'Dramatic shake + push',       cls:'d-eq', badge:null},
+  {id:'liquid',    name:'Liquid Motion',   desc:'Fluid wave movement',         cls:'d-lq', badge:null},
+  {id:'tiltshift', name:'Tilt Shift',      desc:'Miniature world depth',       cls:'d-ts', badge:null},
+  {id:'letterbox', name:'Letterbox',       desc:'Widescreen cinema bars',      cls:'d-lb', badge:'PRO',  bc:'badge-pro'},
+  {id:'splitreveal',name:'Split Reveal',   desc:'Dual panel cinematic open',   cls:'d-sp', badge:null},
 ];
 
 const MAG_TEMPLATES = [
@@ -623,6 +690,7 @@ const SKILLS = [
   {icon:'🎨', name:'Color Grading',      desc:'10 cinematic presets — Moody, Warm, Night...',    level:5, tool:'grade'},
   {icon:'📐', name:'Resize & Convert',   desc:'Any dimension — print-ready, web, social',        level:5, tool:'resize'},
   {icon:'📹', name:'Video Export',       desc:'YouTube 1080p, Shorts, TikTok, Instagram',        level:4, tool:'animator'},
+  {icon:'🎞️', name:'30 Templates',      desc:'Ken Burns → Starfield → Holographic + 27 more',   level:5, tool:'animator'},
 ];
 
 function buildSkillsList() {
