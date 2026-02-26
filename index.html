@@ -377,6 +377,17 @@ select{background:var(--card2);color:var(--text);cursor:pointer}
 .d-ib{background:linear-gradient(135deg,#0e0804,#1e1008,#2e1c0e,#4e2c16);animation:ib 10s ease-in-out infinite alternate;filter:saturate(0.88)}
 @keyframes ib{from{transform:scale(1.18) translateY(1%);filter:brightness(0.75)saturate(0.85)}to{transform:scale(1.0) translateY(-1%);filter:brightness(1.08)saturate(0.92)}}
 
+/* ──── Anime style cards ──── */
+.anime-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.anime-card{border:1.5px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;transition:.15s}
+.anime-card:hover{border-color:var(--border2)}
+.anime-card.active{border-color:var(--accent)}
+.anime-thumb{height:52px;display:flex;align-items:center;justify-content:center;font-size:22px;position:relative}
+.anime-thumb-label{position:absolute;bottom:3px;right:4px;font-size:8px;font-weight:700;color:rgba(255,255,255,.7)}
+.anime-label{padding:5px 7px;background:var(--card)}
+.anime-label .al-name{font-size:10px;font-weight:700;color:var(--text)}
+.anime-label .al-desc{font-size:8px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.anime-card.active .al-name{color:var(--accent2)}
 /* ──── Music tracks ──── */
 .music-tracks{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto}
 .music-track{display:flex;align-items:center;gap:8px;padding:7px 8px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;cursor:pointer;transition:.15s;min-height:40px}
@@ -475,6 +486,7 @@ select{background:var(--card2);color:var(--text);cursor:pointer}
           <div class="tool-card" onclick="selectTool('retouch',this)"><div class="tc-icon">💆</div><div class="tc-name">Retouch</div></div>
           <div class="tool-card" onclick="selectTool('grade',this)"><div class="tc-icon">🎨</div><div class="tc-name">Color Grade</div></div>
           <div class="tool-card" onclick="selectTool('resize',this)"><div class="tc-icon">📐</div><div class="tc-name">Resize</div><div class="tc-badge badge-pro">FREE</div></div>
+          <div class="tool-card" onclick="selectTool('anime',this)"><div class="tc-icon">🎌</div><div class="tc-name">Anime</div><div class="tc-badge badge-hot">NEW</div></div>
           <div class="tool-card" onclick="selectTool('settings',this)"><div class="tc-icon">⚙️</div><div class="tc-name">Settings</div></div>
         </div>
       </div>
@@ -640,6 +652,7 @@ const state = {
   faceTargetFile: null,
   selectedMusic: 'none',
   musicVol: 0.35,
+  selectedAnimeStyle: 'ghibli',
 };
 
 // ─── Tool definitions ─────────────────────────────────────────────────────────
@@ -651,6 +664,7 @@ const TOOLS = {
   retouch:  {title:'💆 AI Retouch',      sub:'Professional skin & color retouch', btn:'✨ Retouch Photo'},
   grade:    {title:'🎨 Color Grade',     sub:'Cinematic color grading presets', btn:'🎨 Apply Grade'},
   resize:   {title:'📐 Resize & Convert',sub:'Resize, convert, crop any image', btn:'📐 Process Image'},
+  anime:    {title:'🎌 Anime Restyle',    sub:'Cel-shading + edge detection — Ghibli, Shōnen, Manga & more', btn:'🎌 Generate Anime'},
   settings: {title:'⚙️ Settings',         sub:'Studio preferences', btn:null},
 };
 
@@ -702,6 +716,15 @@ const ANIMS = [
   {id:'innerbloom',      name:'Innerbloom',        desc:'Slow pullback — the 5:46 moment',  cls:'d-ib',  badge:'🌸',   bc:'badge-pro'},
 ];
 
+const ANIME_STYLES_LIST = [
+  {id:'ghibli',         name:'Studio Ghibli',  desc:'Soft watercolor, warm & dreamy',           icon:'🌿', gradient:'linear-gradient(135deg,#1a2e10,#2a4a1a,#5a8a40)'},
+  {id:'shonen',         name:'Shōnen',         desc:'Bold outlines, vivid energy (Naruto/DBZ)', icon:'⚡', gradient:'linear-gradient(135deg,#1a0800,#3a1000,#cc4400)'},
+  {id:'cyberpunk_anime',name:'Cyberpunk Anime', desc:'Ghost in the Shell / Akira neon dark',     icon:'🤖', gradient:'linear-gradient(135deg,#00001a,#001a2a,#002a40)'},
+  {id:'manga',          name:'Manga',          desc:'B&W ink, sharp outlines',                  icon:'📖', gradient:'linear-gradient(135deg,#050505,#181818,#2a2a2a)'},
+  {id:'ink_wash',       name:'Ink & Wash',     desc:'Sumi-e brushwork, monochrome',             icon:'🖌',  gradient:'linear-gradient(135deg,#080808,#1a1010,#2a1a18)'},
+  {id:'lofi_anime',     name:'Lo-Fi Anime',    desc:'Muted tones, late-night vibe',             icon:'🌙', gradient:'linear-gradient(135deg,#0a0818,#141228,#1e1a30)'},
+];
+
 const MAG_TEMPLATES = [
   {id:'vogue',      name:'VOGUE',      cls:'mg-vogue'},
   {id:'si_swimsuit',name:'Sports Illustrated', cls:'mg-si'},
@@ -746,7 +769,8 @@ const SKILLS = [
   {icon:'🎨', name:'Color Grading',      desc:'10 cinematic presets — Moody, Warm, Night...',    level:5, tool:'grade'},
   {icon:'📐', name:'Resize & Convert',   desc:'Any dimension — print-ready, web, social',        level:5, tool:'resize'},
   {icon:'📹', name:'Video Export',       desc:'YouTube 1080p, Shorts, TikTok, Instagram',        level:4, tool:'animator'},
-  {icon:'🎞️', name:'30 Templates',      desc:'Ken Burns → Starfield → Holographic + 27 more',   level:5, tool:'animator'},
+  {icon:'🎞️', name:'42 Templates',      desc:'Ken Burns → Innerbloom → Cyberpunk + 39 more',    level:5, tool:'animator'},
+  {icon:'🎌', name:'Anime Restyle',      desc:'Cel-shading: Ghibli, Shōnen, Manga, Cyberpunk',  level:4, tool:'anime'},
 ];
 
 function buildSkillsList() {
@@ -969,6 +993,27 @@ function buildPanel(tool) {
     </div>`;
   }
 
+  if(tool==='anime') return `
+    ${uploadZone}
+    <div class="rp-field"><label>Anime Style</label>
+      <div class="anime-grid">${ANIME_STYLES_LIST.map(s=>`
+        <div class="anime-card${s.id===state.selectedAnimeStyle?' active':''}" onclick="selAnime('${s.id}',this)">
+          <div class="anime-thumb" style="background:${s.gradient}">${s.icon}
+            <div class="anime-thumb-label">${s.name.toUpperCase().slice(0,8)}</div>
+          </div>
+          <div class="anime-label"><div class="al-name">${s.name}</div><div class="al-desc">${s.desc}</div></div>
+        </div>`).join('')}
+      </div>
+    </div>
+    <div class="rp-field"><label>Output Quality</label>
+      <select id="animeQual"><option value="medium" selected>HD 720p</option><option value="high">1080p</option><option value="low">480p (fast)</option></select>
+    </div>
+    <div style="margin:8px 0;padding:10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;font-size:10px;color:var(--text3);line-height:1.7">
+      🎌 Works on <strong style="color:var(--text2)">photos and videos</strong><br>
+      Real edge detection + color cel-shading<br>
+      Inspired by Luma AI · Videoleap Anime · PowerDirector
+    </div>`;
+
   if(tool==='settings') return `
     <div class="settings-row">
       <div><div class="sr-label">Server URL</div><div class="sr-sub">localhost:7474</div></div>
@@ -1010,6 +1055,7 @@ function selStyle(id,el){ state.selectedStyle=id; document.querySelectorAll('#rp
 function selStyleFx(id,el){ state.selectedStyle=id; document.querySelectorAll('#animList .anim-item').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
 function selMag(id,el){ state.selectedMagTemplate=id; document.querySelectorAll('.mag-card').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
 function selBg(id,el){ state.selectedBg=id; document.querySelectorAll('.bg-swatch').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
+function selAnime(id,el){ state.selectedAnimeStyle=id; document.querySelectorAll('.anime-card').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
 function selMusic(id,el){
   state.selectedMusic=id;
   document.querySelectorAll('#musicTrackList .music-track').forEach(x=>x.classList.remove('mt-active'));
@@ -1157,6 +1203,13 @@ async function generate() {
         fd.append('format', document.getElementById('resFmt')?.value||'jpg');
         fd.append('quality',document.getElementById('resQual')?.value||'95');
         state.resultMime='image/jpeg';
+      } else if(tool==='anime'){
+        endpoint='/anime';
+        fd.append('style',  state.selectedAnimeStyle);
+        fd.append('quality',document.getElementById('animeQual')?.value||'medium');
+        // Result mime depends on input type
+        const isVid = state.uploadedFile && /\.(mov|mp4|m4v|avi|mkv|webm|3gp|wmv|flv)$/i.test(state.uploadedFile.name);
+        state.resultMime = isVid ? 'video/mp4' : 'image/jpeg';
       }
       const r=await fetch('http://localhost:7474'+endpoint,{method:'POST',body:fd});
       if(!r.ok) throw new Error(await r.text());

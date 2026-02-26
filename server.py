@@ -52,6 +52,16 @@ def ensure_music_tracks():
             except Exception as e:
                 print(f"  ✗ Music gen failed for {tid}: {e}")
 
+# ─── Anime / Illustration style presets ──────────────────────────────────────
+ANIME_STYLES = {
+    "ghibli":         {"name":"Studio Ghibli",    "desc":"Soft watercolor, warm & dreamy",          "icon":"🌿", "color":"eq=saturation=1.55:brightness=0.07:contrast=1.12:gamma_r=1.06:gamma_b=0.94,unsharp=lx=3:ly=3:la=-0.22",    "el":0.07, "eh":0.22},
+    "shonen":         {"name":"Shōnen",            "desc":"Bold outlines, vivid energy (Naruto/DBZ)","icon":"⚡", "color":"eq=contrast=1.45:saturation=2.1:brightness=0.02",                                                          "el":0.05, "eh":0.30},
+    "cyberpunk_anime":{"name":"Cyberpunk Anime",   "desc":"Ghost in the Shell / Akira neon dark",   "icon":"🤖", "color":"eq=contrast=1.5:saturation=1.4:brightness=-0.08,hue=h=-18:s=1.7",                                         "el":0.06, "eh":0.28},
+    "manga":          {"name":"Manga",             "desc":"B&W ink, sharp outlines",                "icon":"📖", "color":"eq=contrast=2.2:saturation=0.0:brightness=0.04",                                                           "el":0.06, "eh":0.30},
+    "ink_wash":       {"name":"Ink & Wash",        "desc":"Sumi-e brushwork, monochrome texture",   "icon":"🖌",  "color":"eq=contrast=1.8:saturation=0.15:brightness=-0.04",                                                         "el":0.07, "eh":0.28},
+    "lofi_anime":     {"name":"Lo-Fi Anime",       "desc":"Muted tones, late-night vibe",           "icon":"🌙", "color":"eq=contrast=1.2:saturation=0.88:brightness=-0.02,hue=h=15:s=0.85",                                        "el":0.08, "eh":0.24},
+}
+
 QUALITY_MAP = {
     "high":"1920x1080","medium":"1280x720","low":"854x480",
     "youtube":"1920x1080","ytshorts":"1080x1920"
@@ -317,6 +327,8 @@ class Handler(BaseHTTPRequestHandler):
                 mime = mimetypes.guess_type(fpath)[0] or "application/octet-stream"
                 return self._serve_file(fpath, mime, download=True)
             return self._text("Not found", 404)
+        if p == "/anime-styles":
+            return self._json([{"id":k,**{x:v[x] for x in ("name","desc","icon")}} for k,v in ANIME_STYLES.items()])
         if p == "/music":
             tracks = []
             for tid, info in MUSIC_TRACKS.items():
@@ -338,6 +350,7 @@ class Handler(BaseHTTPRequestHandler):
             fields, files = self._parse()
             routes = {
                 "/animate":  self._animate,
+                "/anime":    self._anime,
                 "/faceswap": self._faceswap,
                 "/bgswap":   self._bgswap,
                 "/retouch":  self._retouch,
@@ -822,6 +835,58 @@ class Handler(BaseHTTPRequestHandler):
         finally:
             try: os.unlink(photo_path)
             except: pass
+
+    # ── /anime ────────────────────────────────────────────────────────────────
+    def _anime(self, fields, files):
+        if "photo" not in files:
+            return self._text("No file uploaded", 400)
+        def g(k,d=""): v=fields.get(k,d); return v if v else d
+
+        style_id = g("style","ghibli")
+        style    = ANIME_STYLES.get(style_id, ANIME_STYLES["ghibli"])
+        quality  = g("quality","medium")
+
+        fname = files["photo"][0]
+        ext   = Path(fname).suffix.lower()
+        VIDEO = {'.mov','.mp4','.m4v','.avi','.mkv','.webm','.3gp','.mts','.ts','.wmv','.flv'}
+        raw   = self._save(files["photo"])
+        is_vid = ext in VIDEO
+
+        size_str = QUALITY_MAP.get(quality,"1280x720")
+        w, h = [int(x) for x in size_str.split("x")]
+        w -= w%2; h -= h%2
+        scale  = f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h}"
+        color  = style["color"]
+        el, eh = style["el"], style["eh"]
+
+        # Cel-shading: color grade + edge detection overlay
+        fc = (f"[0:v]{scale}[sc];"
+              f"[sc]split=2[base][esrc];"
+              f"[esrc]edgedetect=low={el}:high={eh}:mode=canny[edges];"
+              f"[base]{color}[colored];"
+              f"[colored][edges]blend=all_mode=darken,format=yuv420p[out]")
+
+        out = tempfile.mktemp(suffix=".mp4" if is_vid else ".jpg", dir="/tmp")
+        try:
+            if is_vid:
+                cmd = [FFMPEG,"-y","-i",raw,"-filter_complex",fc,
+                       "-map","[out]","-map","0:a?",
+                       "-c:v","libx264","-preset","fast","-crf","18",
+                       "-c:a","aac","-b:a","192k","-movflags","+faststart",out]
+            else:
+                cmd = [FFMPEG,"-y","-i",raw,"-filter_complex",fc,
+                       "-map","[out]","-frames:v","1","-q:v","2",out]
+            r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
+            if r.returncode != 0: raise RuntimeError(r.stderr[-800:])
+
+            name = f"anime-{style_id}-{int(time.time())}.{'mp4' if is_vid else 'jpg'}"
+            self._persist(out, name)
+            with open(out,"rb") as f: data = f.read()
+            self._binary(data,"video/mp4" if is_vid else "image/jpeg", name)
+        finally:
+            for p in [raw, out]:
+                try: os.unlink(p)
+                except: pass
 
 if __name__ == "__main__":
     print("""
