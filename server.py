@@ -78,7 +78,8 @@ def make_video_animation(src, style, quality, fmt, grade, vignette, grain, sharp
         "liquid":      f"{scale},zoompan=z='1.07':x='iw/2-(iw/zoom/2)+14*sin(t*2)':y='ih/2-(ih/zoom/2)+10*cos(t*1.5)':d=1",
         "tiltshift":   f"{scale},vignette=PI/2.2,eq=contrast=1.05:saturation=0.95",
         "letterbox":   f"{scale},eq=contrast=1.12:saturation=0.90",
-        "splitreveal": f"{scale},eq=contrast=1.08:saturation=1.12",
+        "splitreveal":   f"{scale},eq=contrast=1.08:saturation=1.12",
+        "cyberpunk_city":f"{scale},hue=h='t*15':s=1.9,eq=contrast=1.3:brightness=-0.08:saturation=1.7",
     }
 
     vf = VSTYLES.get(style, VSTYLES["kenburns"])
@@ -144,7 +145,8 @@ def make_animation(src, style, duration, quality, fmt, grade, vignette, grain, s
       "liquid":     f"scale={BIG}:{BIG},zoompan=z='1.08+0.04*sin(2*3.14159*on/({fps*3}))':x='iw/2-(iw/zoom/2)+22*sin(2*3.14159*on/({fps*4}))':y='ih/2-(ih/zoom/2)+16*cos(2*3.14159*on/({fps*3}))':d=1:s={w}x{h}:fps={fps}",
       "tiltshift":  f"scale={BIG}:{BIG},zoompan=z='1.05+0.05*on/{N}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps={fps},vignette=PI/2.2",
       "letterbox":  f"scale={BIG}:{BIG},zoompan=z='1.0+0.14*on/{N}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)-18*on/{N}':d=1:s={w}x{h}:fps={fps},eq=contrast=1.12",
-      "splitreveal":f"scale={BIG}:{BIG},zoompan=z='1.07':x='iw*0.07*on/{N}':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps={fps},eq=contrast=1.08:saturation=1.1",
+      "splitreveal":   f"scale={BIG}:{BIG},zoompan=z='1.07':x='iw*0.07*on/{N}':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps={fps},eq=contrast=1.08:saturation=1.1",
+      "cyberpunk_city":f"scale={BIG}:{BIG},zoompan=z='1.06+0.02*sin(2*3.14159*on/({fps*3}))':x='iw/2-(iw/zoom/2)+iw*0.04*sin(2*3.14159*on/{N})':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps={fps},hue=h='t*15':s=1.9,eq=contrast=1.3:brightness=-0.08:saturation=1.7",
     }
     filters = [S.get(style, S["kenburns"])]
     if grade   == "1" and "eq=" not in filters[0]: filters.append("eq=contrast=1.10:saturation=1.15")

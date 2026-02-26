@@ -349,6 +349,8 @@ select{background:var(--card2);color:var(--text);cursor:pointer}
 @keyframes lb{from{transform:scale(1) translateY(0)}to{transform:scale(1.14) translateY(-5%)}}
 .d-sp{background:linear-gradient(90deg,#1a0030,#200050,#001a40);animation:sp 3s ease-in-out infinite}
 @keyframes sp{0%,100%{clip-path:inset(0 55% 0 55%)}50%{clip-path:inset(0 0 0 0)}}
+.d-cc{background:linear-gradient(180deg,#000010,#05001a,#0a0030,#150040);animation:cc 2.4s ease-in-out infinite}
+@keyframes cc{0%,100%{box-shadow:inset 0 0 18px #7c3aed,inset 0 0 35px #0066ff;transform:translateX(0);filter:hue-rotate(0deg)}50%{box-shadow:inset 0 0 35px #ff0099,inset 0 0 55px #00ccff;transform:translateX(-7%);filter:hue-rotate(40deg)}}
 
 /* Settings view */
 .settings-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
@@ -643,7 +645,8 @@ const ANIMS = [
   {id:'liquid',    name:'Liquid Motion',   desc:'Fluid wave movement',         cls:'d-lq', badge:null},
   {id:'tiltshift', name:'Tilt Shift',      desc:'Miniature world depth',       cls:'d-ts', badge:null},
   {id:'letterbox', name:'Letterbox',       desc:'Widescreen cinema bars',      cls:'d-lb', badge:'PRO',  bc:'badge-pro'},
-  {id:'splitreveal',name:'Split Reveal',   desc:'Dual panel cinematic open',   cls:'d-sp', badge:null},
+  {id:'splitreveal',   name:'Split Reveal',       desc:'Dual panel cinematic open',     cls:'d-sp', badge:null},
+  {id:'cyberpunk_city',name:'Cyberpunk City',     desc:'Neon streets, hue-cycled glow',  cls:'d-cc', badge:'HOT',  bc:'badge-hot'},
 ];
 
 const MAG_TEMPLATES = [
