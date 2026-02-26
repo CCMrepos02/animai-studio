@@ -248,6 +248,23 @@ class Handler(BaseHTTPRequestHandler):
         with open(tmp,"wb") as f: f.write(data)
         return tmp
 
+    def _to_jpeg(self, file_tuple):
+        """Save any upload (HEIC/MOV/PNG/WEBP/JPEG) as a flat JPEG for compatibility."""
+        from PIL import Image, ImageOps
+        raw = self._save(file_tuple)
+        out = tempfile.mktemp(suffix=".jpg", dir="/tmp")
+        try:
+            img = Image.open(raw).convert("RGB")
+            try: img = ImageOps.exif_transpose(img)
+            except: pass
+            img.save(out, "JPEG", quality=95)
+            return out
+        except Exception as e:
+            raise RuntimeError(f"Cannot decode image ({Path(file_tuple[0]).suffix}): {e}")
+        finally:
+            try: os.unlink(raw)
+            except: pass
+
     def _persist(self, img_or_path, name):
         """Save PIL image or file path to OUTPUT dir."""
         from PIL import Image
@@ -260,9 +277,30 @@ class Handler(BaseHTTPRequestHandler):
 
     # ── /animate ─────────────────────────────────────────────────────────────
     def _animate(self, fields, files):
+        from PIL import Image
         def g(k, d=""): v=fields.get(k,d); return v if v else d
         if "photo" not in files: return self._text("No photo",400)
-        src = self._save(files["photo"])
+
+        raw = self._save(files["photo"])
+        # Always convert to JPEG so ffmpeg -loop 1 works regardless of
+        # input format (MOV, HEIC, PNG, WEBP, video frame, etc.)
+        src = tempfile.mktemp(suffix=".jpg", dir="/tmp")
+        try:
+            img = Image.open(raw).convert("RGB")
+            # Auto-orient from EXIF
+            try:
+                from PIL import ImageOps
+                img = ImageOps.exif_transpose(img)
+            except Exception:
+                pass
+            img.save(src, "JPEG", quality=95)
+        except Exception as e:
+            return self._text(f"Cannot decode image: {e}", 400)
+        finally:
+            try: os.unlink(raw)
+            except: pass
+
+        out = None
         try:
             out = make_animation(src, g("style","kenburns"), g("duration","8"),
                                  g("quality","medium"), g("format","mp4"),
@@ -271,10 +309,11 @@ class Handler(BaseHTTPRequestHandler):
             self._persist(out, name)
             with open(out,"rb") as f: data = f.read()
             self._binary(data,"video/mp4", name)
-            os.unlink(out)
         finally:
-            try: os.unlink(src)
-            except: pass
+            for p in [src, out]:
+                if p:
+                    try: os.unlink(p)
+                    except: pass
 
     # ── /faceswap ─────────────────────────────────────────────────────────────
     def _faceswap(self, fields, files):
@@ -282,8 +321,8 @@ class Handler(BaseHTTPRequestHandler):
         from PIL import Image, ImageFilter
         if "source" not in files or "target" not in files:
             return self._text("Need 'source' and 'target' images", 400)
-        src_path = self._save(files["source"])
-        tgt_path = self._save(files["target"])
+        src_path = self._to_jpeg(files["source"])
+        tgt_path = self._to_jpeg(files["target"])
         try:
             app, swapper = get_face_tools()
             src_img = cv2.imread(src_path)
