@@ -16,9 +16,9 @@ MUSIC_DIR = os.path.expanduser("~/Desktop/photo-animator/music")
 os.makedirs(OUTPUT, exist_ok=True)
 os.makedirs(MUSIC_DIR, exist_ok=True)
 
-# ─── Music Library (ANIMA / RÜFÜS / ODESZA atmospheric synth tracks) ─────────
+# ─── Music Library (Anyma / RÜFÜS DU SOL / ODESZA atmospheric synth tracks) ─────────
 MUSIC_TRACKS = {
-    "anima_atmos":    {"name":"ANIMA Atmos",    "desc":"Deep atmospheric drone",    "color":"#120038", "icon":"🌫"},
+    "anima_atmos":    {"name":"Anyma Atmos",    "desc":"Deep atmospheric drone",    "color":"#120038", "icon":"🌫"},
     "rufus_warm":     {"name":"RÜFÜS Warm",      "desc":"Desert warm pad",           "color":"#2a1000", "icon":"🌅"},
     "odesza_cascade": {"name":"ODESZA Cascade",  "desc":"Bright cascading sweep",    "color":"#001828", "icon":"🏔"},
     "gravity_float":  {"name":"Gravity Float",   "desc":"Slow-fall ambient texture", "color":"#001818", "icon":"🍃"},
@@ -131,7 +131,7 @@ def make_video_animation(src, style, quality, fmt, grade, vignette, grain, sharp
         "letterbox":   f"{scale},eq=contrast=1.12:saturation=0.90",
         "splitreveal":   f"{scale},eq=contrast=1.08:saturation=1.12",
         "cyberpunk_city": f"{scale},hue=h='t*15':s=1.9,eq=contrast=1.3:brightness=-0.08:saturation=1.7",
-        # ── ANIMA / RÜFÜS / ODESZA arc ───────────────────────────────────────
+        # ── Anyma / RÜFÜS DU SOL / ODESZA arc ───────────────────────────────────────
         "anima":          f"{scale},eq=contrast=1.18:saturation=0.75:brightness=-0.03",
         "rufus":          f"{scale},eq=brightness=0.03:saturation=0.85:gamma_r=1.07:gamma_b=0.92",
         "odesza":         f"{scale},eq=brightness=0.05:saturation=1.1:gamma_r=1.04",
@@ -236,7 +236,7 @@ def make_animation(src, style, duration, quality, fmt, grade, vignette, grain, s
       "letterbox":  f"scale={BIG}:{BIG},zoompan=z='1.0+0.14*on/{N}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)-18*on/{N}':d=1:s={w}x{h}:fps={fps},eq=contrast=1.12",
       "splitreveal":   f"scale={BIG}:{BIG},zoompan=z='1.07':x='iw*0.07*on/{N}':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps={fps},eq=contrast=1.08:saturation=1.1",
       "cyberpunk_city":  f"scale={BIG}:{BIG},zoompan=z='1.06+0.02*sin(2*3.14159*on/({fps*3}))':x='iw/2-(iw/zoom/2)+iw*0.04*sin(2*3.14159*on/{N})':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps={fps},hue=h='t*15':s=1.9,eq=contrast=1.3:brightness=-0.08:saturation=1.7",
-      # ── ANIMA / RÜFÜS / ODESZA arc ─────────────────────────────────────────
+      # ── Anyma / RÜFÜS DU SOL / ODESZA arc ─────────────────────────────────────────
       "anima":           f"scale={BIG}:{BIG},zoompan=z='1.0+0.07*on/{N}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)-10*on/{N}':d=1:s={w}x{h}:fps={fps},eq=contrast=1.18:saturation=0.75:brightness=-0.03",
       "rufus":           f"scale={BIG}:{BIG},zoompan=z='1.06+0.02*sin(2*3.14159*on/({fps*10}))':x='iw/2-(iw/zoom/2)+iw*0.025*sin(2*3.14159*on/{N})':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps={fps},eq=brightness=0.03:saturation=0.85:gamma_r=1.07:gamma_b=0.92",
       "odesza":          f"scale={BIG}:{BIG},zoompan=z='1.0+0.09*on/{N}':x='iw/2-(iw/zoom/2)+iw*0.04*on/{N}':y='max(0,ih/2-(ih/zoom/2)-18*on/{N})':d=1:s={w}x{h}:fps={fps},eq=brightness=0.05:saturation=1.1:gamma_r=1.04",
