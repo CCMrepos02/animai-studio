@@ -295,7 +295,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def _cors(self):
         self.send_header("Access-Control-Allow-Origin","*")
-        self.send_header("Access-Control-Allow-Methods","GET,POST,OPTIONS")
+        self.send_header("Access-Control-Allow-Methods","GET,POST,DELETE,OPTIONS")
         self.send_header("Access-Control-Allow-Headers","*")
 
     def do_OPTIONS(self):
@@ -351,6 +351,23 @@ class Handler(BaseHTTPRequestHandler):
         except Exception as e:
             traceback.print_exc()
             self._text(f"Error: {e}", 500)
+
+    def do_OPTIONS(self):
+        self.send_response(204); self._cors(); self.end_headers()
+
+    def do_DELETE(self):
+        p = self.path.split("?")[0]
+        if p.startswith("/output/"):
+            fname = p[8:]
+            # Sanitize — no path traversal
+            if "/" in fname or "\\" in fname or ".." in fname:
+                return self._text("Invalid filename", 400)
+            fpath = os.path.join(OUTPUT, fname)
+            if os.path.isfile(fpath):
+                os.remove(fpath)
+                return self._json({"ok": True, "deleted": fname})
+            return self._text("Not found", 404)
+        self._text("Cannot delete", 400)
 
     # ── Multipart parser ─────────────────────────────────────────────────────
     def _parse(self):

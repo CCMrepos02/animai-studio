@@ -250,6 +250,8 @@ select{background:var(--card2);color:var(--text);cursor:pointer}
 .proj-thumb{height:72px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:24px;position:relative;overflow:hidden}
 .proj-thumb img,.proj-thumb video{width:100%;height:100%;object-fit:cover}
 .proj-type{position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.7);padding:2px 5px;border-radius:3px;font-size:9px;font-weight:700;color:#fff}
+.proj-delete{position:absolute;top:4px;right:4px;background:rgba(180,30,30,.85);color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;opacity:0;transition:.15s;cursor:pointer;z-index:10}
+.proj-card:hover .proj-delete{opacity:1}
 .proj-info{padding:6px 8px}
 .proj-info .pn{font-size:10px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .proj-info .ps{font-size:9px;color:var(--text3)}
@@ -503,7 +505,10 @@ select{background:var(--card2);color:var(--text);cursor:pointer}
       <div id="lp-projects" class="lp-pane" style="display:none">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <div class="lp-section-title" style="margin:0">Output Files</div>
-          <span style="font-size:10px;color:var(--accent2);cursor:pointer" onclick="loadFiles()">⟳ Refresh</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span style="font-size:10px;color:var(--accent2);cursor:pointer" onclick="loadFiles()">⟳ Refresh</span>
+            <span style="font-size:10px;color:var(--red);cursor:pointer" onclick="clearAllFiles()">🗑 Clear All</span>
+          </div>
         </div>
         <div class="projects-grid" id="filesGrid">
           <div class="empty-state" style="grid-column:span 2"><div class="es-icon">📂</div>No files yet</div>
@@ -1283,17 +1288,18 @@ async function loadFiles(){
     const r=await fetch('http://localhost:7474/files',{signal:AbortSignal.timeout(3000)});
     const files=await r.json();
     if(!files.length){ grid.innerHTML='<div class="empty-state" style="grid-column:span 2"><div class="es-icon">📂</div>No files yet</div>'; return; }
-    grid.innerHTML=files.slice(0,20).map(f=>`
+    grid.innerHTML=files.slice(0,60).map(f=>`
       <div class="proj-card" onclick="previewFile('${f.url}','${f.type}')">
         <div class="proj-thumb">
           ${f.type==='video'
             ? `<video src="http://localhost:7474${f.url}" muted style="width:100%;height:100%;object-fit:cover"></video>`
             : `<img src="http://localhost:7474${f.url}" style="width:100%;height:100%;object-fit:cover" loading="lazy">`}
           <div class="proj-type">${f.type==='video'?'MP4':'IMG'}</div>
+          <div class="proj-delete" onclick="event.stopPropagation();deleteFile('${f.name}')" title="Delete">✕</div>
         </div>
         <div class="proj-info">
           <div class="pn">${f.name}</div>
-          <div class="ps">${(f.size/1024).toFixed(0)}KB</div>
+          <div class="ps">${(f.size/1024).toFixed(0)}KB · <span style="cursor:pointer;color:var(--accent2)" onclick="event.stopPropagation();window.open('http://localhost:7474${f.url}')">↓</span></div>
         </div>
       </div>`).join('');
   }catch(e){grid.innerHTML='<div class="empty-state" style="grid-column:span 2;color:var(--red)">Server offline</div>';}
@@ -1312,6 +1318,23 @@ function previewFile(url, type){
   document.getElementById('resultWrap').innerHTML=type==='video'
     ?`<video src="${fullUrl}" controls autoplay loop muted style="width:100%;border-radius:8px"></video>`
     :`<img src="${fullUrl}" style="width:100%;border-radius:8px">`;
+}
+
+async function deleteFile(fname){
+  if(!confirm(`Delete "${fname}"?`)) return;
+  try {
+    const r = await fetch(`http://localhost:7474/output/${encodeURIComponent(fname)}`, {method:'DELETE'});
+    if(r.ok){ loadFiles(); } else { alert('Delete failed: '+await r.text()); }
+  } catch(e){ alert('Server error: '+e.message); }
+}
+
+async function clearAllFiles(){
+  if(!confirm('Delete ALL output files? This cannot be undone.')) return;
+  try {
+    const files = await fetch('http://localhost:7474/files').then(r=>r.json());
+    await Promise.all(files.map(f=>fetch(`http://localhost:7474/output/${encodeURIComponent(f.name)}`,{method:'DELETE'})));
+    loadFiles();
+  } catch(e){ alert('Error: '+e.message); }
 }
 
 // ─── Export ───────────────────────────────────────────────────────────────────
