@@ -281,54 +281,64 @@ class Handler(BaseHTTPRequestHandler):
         def g(k, d=""): v=fields.get(k,d); return v if v else d
         if "photo" not in files: return self._text("No photo", 400)
 
-        fname, fdata = files["photo"]
-        raw_ext = Path(fname).suffix.lower()
-        VIDEO_EXTS = {'.mov','.mp4','.m4v','.avi','.mkv','.webm','.3gp','.mts','.ts'}
-
-        raw  = self._save(files["photo"])
-        src  = tempfile.mktemp(suffix=".jpg", dir="/tmp")
-        out  = None
+        fname  = files["photo"][0]
+        ext    = Path(fname).suffix.lower()
+        VIDEO  = {'.mov','.mp4','.m4v','.avi','.mkv','.webm','.3gp','.mts','.ts','.wmv','.flv'}
+        raw    = self._save(files["photo"])
+        src    = tempfile.mktemp(suffix=".jpg", dir="/tmp")
+        out    = None
 
         try:
-            if raw_ext in VIDEO_EXTS:
-                # ── Video upload: extract best frame (5% in to skip black) ──
-                r = subprocess.run([
-                    FFMPEG, "-y", "-i", raw,
-                    "-vf", "select='eq(pict_type\\,I)'",   # first I-frame
-                    "-vframes", "1", "-q:v", "2", src
-                ], capture_output=True, timeout=30)
-
-                if r.returncode != 0 or not os.path.exists(src) or os.path.getsize(src) < 100:
-                    # Fallback: grab frame at 0.5s
-                    r2 = subprocess.run([
-                        FFMPEG, "-y", "-ss", "0.5", "-i", raw,
-                        "-vframes", "1", "-q:v", "2", src
-                    ], capture_output=True, timeout=30)
-                    if r2.returncode != 0:
-                        return self._text(f"Could not extract frame from video: {r2.stderr[-300:]}", 400)
-
-                # Make sure PIL can clean it up
+            # ── Step 1: get a clean JPEG source frame ─────────────────────
+            if ext in VIDEO:
+                print(f"  Video detected ({ext}) — extracting frame...")
+                # Try multiple timestamps until we get a good frame
+                for ss in ["0", "1", "2", "0.5"]:
+                    r = subprocess.run(
+                        [FFMPEG, "-y", "-ss", ss, "-i", raw,
+                         "-vframes", "1", "-vf", "scale=iw:ih", src],
+                        capture_output=True, timeout=30
+                    )
+                    if r.returncode == 0 and os.path.exists(src) and os.path.getsize(src) > 500:
+                        print(f"  Frame extracted at {ss}s")
+                        break
+                else:
+                    return self._text(
+                        "Could not extract frame from video.\n"
+                        "Try uploading a photo (JPG/PNG) instead.", 400
+                    )
+                # Clean up via PIL (fix orientation, ensure valid JPEG)
                 img = Image.open(src).convert("RGB")
                 try: img = ImageOps.exif_transpose(img)
                 except: pass
                 img.save(src, "JPEG", quality=95)
-                print(f"  Video → frame extracted: {img.size}")
-
             else:
-                # ── Image upload (JPEG/PNG/HEIC/WEBP etc.) ────────────────
+                # ── Image: convert anything PIL can read → JPEG ───────────
                 try:
                     img = Image.open(raw).convert("RGB")
                     try: img = ImageOps.exif_transpose(img)
                     except: pass
                     img.save(src, "JPEG", quality=95)
+                    print(f"  Image decoded: {img.size} ({ext})")
                 except Exception as e:
-                    return self._text(f"Cannot decode image ({raw_ext}): {e}", 400)
+                    # Last resort: try ffmpeg to decode (handles some raw formats)
+                    r = subprocess.run(
+                        [FFMPEG, "-y", "-i", raw, "-vframes", "1", src],
+                        capture_output=True, timeout=30
+                    )
+                    if r.returncode != 0 or not os.path.exists(src) or os.path.getsize(src) < 500:
+                        return self._text(
+                            f"Cannot read file ({ext}). "
+                            "Please upload a JPG, PNG, WEBP, HEIC, or video file.", 400
+                        )
 
+            # ── Step 2: animate ───────────────────────────────────────────
             out = make_animation(
                 src,
                 g("style","kenburns"), g("duration","8"),
-                g("quality","medium"), g("format","mp4"),
-                g("grade","1"), g("vignette","1"), g("grain","0"), g("sharpen","1")
+                g("quality","medium"),  g("format","mp4"),
+                g("grade","1"),         g("vignette","1"),
+                g("grain","0"),         g("sharpen","1")
             )
             name = f"anim-{g('style','kb')}-{int(time.time())}.mp4"
             self._persist(out, name)
