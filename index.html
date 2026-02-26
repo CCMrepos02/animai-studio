@@ -388,6 +388,15 @@ select{background:var(--card2);color:var(--text);cursor:pointer}
 .anime-label .al-name{font-size:10px;font-weight:700;color:var(--text)}
 .anime-label .al-desc{font-size:8px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .anime-card.active .al-name{color:var(--accent2)}
+/* ──── Web platform cards ──── */
+.web-platform-card{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--card);border:1px solid var(--border);border-radius:7px;gap:8px}
+.wp-info{flex:1;min-width:0}
+.wp-name{font-size:10px;font-weight:700;color:var(--text)}
+.wp-desc{font-size:9px;color:var(--text3);margin-top:1px}
+.wp-actions{display:flex;gap:5px;flex-shrink:0}
+.wp-btn{padding:3px 8px;border:1px solid var(--border2);border-radius:4px;font-size:9px;font-weight:700;background:var(--card2);color:var(--text2);cursor:pointer;transition:.15s;text-decoration:none;display:inline-flex;align-items:center}
+.wp-btn:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.wp-open{background:var(--glow2);border-color:var(--accent);color:var(--accent2)}
 /* ──── Music tracks ──── */
 .music-tracks{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto}
 .music-track{display:flex;align-items:center;gap:8px;padding:7px 8px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;cursor:pointer;transition:.15s;min-height:40px}
@@ -723,6 +732,9 @@ const ANIME_STYLES_LIST = [
   {id:'manga',          name:'Manga',          desc:'B&W ink, sharp outlines',                  icon:'📖', gradient:'linear-gradient(135deg,#050505,#181818,#2a2a2a)'},
   {id:'ink_wash',       name:'Ink & Wash',     desc:'Sumi-e brushwork, monochrome',             icon:'🖌',  gradient:'linear-gradient(135deg,#080808,#1a1010,#2a1a18)'},
   {id:'lofi_anime',     name:'Lo-Fi Anime',    desc:'Muted tones, late-night vibe',             icon:'🌙', gradient:'linear-gradient(135deg,#0a0818,#141228,#1e1a30)'},
+  {id:'jojo',           name:'JoJo Bizarre',   desc:'Hyper-contrast, bold drama',               icon:'💎', gradient:'linear-gradient(135deg,#1a0030,#3a0050,#8800cc)'},
+  {id:'domo',           name:'DomoAI',         desc:'Clean cel-shading, consistent character',  icon:'🎭', gradient:'linear-gradient(135deg,#0a1a0a,#1a301a,#2a4a2a)'},
+  {id:'luma_dream',     name:'Luma Dream',     desc:'Motion-preserved dreamy restyle',          icon:'✨', gradient:'linear-gradient(135deg,#08080e,#10101c,#181828)'},
 ];
 
 const MAG_TEMPLATES = [
@@ -1012,6 +1024,44 @@ function buildPanel(tool) {
       🎌 Works on <strong style="color:var(--text2)">photos and videos</strong><br>
       Real edge detection + color cel-shading<br>
       Inspired by Luma AI · Videoleap Anime · PowerDirector
+    </div>
+    <div class="rp-field">
+      <label style="display:flex;align-items:center;justify-content:space-between">
+        <span>🌐 Web Launch Pad</span>
+        <span style="font-size:9px;color:var(--text3);font-weight:400">Prep + open in one tap</span>
+      </label>
+      <div style="display:flex;flex-direction:column;gap:5px">
+        <div class="web-platform-card">
+          <div class="wp-info">
+            <div class="wp-name">✨ Luma AI Dream Machine</div>
+            <div class="wp-desc">Video-to-Video anime preset · any length</div>
+          </div>
+          <div class="wp-actions">
+            <button class="wp-btn" onclick="trimForPlatform(60,'Luma AI')">✂️ 60s</button>
+            <a class="wp-btn wp-open" href="https://lumalabs.ai/dream-machine" target="_blank">Open →</a>
+          </div>
+        </div>
+        <div class="web-platform-card">
+          <div class="wp-info">
+            <div class="wp-name">🎭 DomoAI</div>
+            <div class="wp-desc">Consistent character style · max 60s</div>
+          </div>
+          <div class="wp-actions">
+            <button class="wp-btn" onclick="trimForPlatform(60,'DomoAI')">✂️ 60s</button>
+            <a class="wp-btn wp-open" href="https://domoai.app" target="_blank">Open →</a>
+          </div>
+        </div>
+        <div class="web-platform-card">
+          <div class="wp-info">
+            <div class="wp-name">🔮 Lens Go</div>
+            <div class="wp-desc">JoJo · Ghibli specific styles · max 5s free</div>
+          </div>
+          <div class="wp-actions">
+            <button class="wp-btn" onclick="trimForPlatform(5,'Lens Go')">✂️ 5s</button>
+            <a class="wp-btn wp-open" href="https://lens.google.com" target="_blank">Open →</a>
+          </div>
+        </div>
+      </div>
     </div>`;
 
   if(tool==='settings') return `
@@ -1056,6 +1106,35 @@ function selStyleFx(id,el){ state.selectedStyle=id; document.querySelectorAll('#
 function selMag(id,el){ state.selectedMagTemplate=id; document.querySelectorAll('.mag-card').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
 function selBg(id,el){ state.selectedBg=id; document.querySelectorAll('.bg-swatch').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
 function selAnime(id,el){ state.selectedAnimeStyle=id; document.querySelectorAll('.anime-card').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
+
+async function trimForPlatform(seconds, platform){
+  if(!state.uploadedFile) return alert('Upload a video first, then trim for '+platform);
+  const btn = event.target; btn.textContent='⏳'; btn.disabled=true;
+  try {
+    const fd = new FormData();
+    fd.append('photo', state.uploadedFile);
+    fd.append('duration', String(seconds));
+    fd.append('start', '0');
+    const r = await fetch('http://localhost:7474/trim', {method:'POST', body:fd});
+    if(!r.ok) throw new Error(await r.text());
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    // Update center canvas + result panel
+    const cv = document.getElementById('preview-video');
+    cv.src = url; cv.style.display = 'block';
+    document.getElementById('preview-media').style.display = 'none';
+    document.getElementById('canvasPlaceholder').style.display = 'none';
+    state.resultURL = url; state.resultMime = 'video/mp4';
+    document.getElementById('resultArea').style.display = 'block';
+    document.getElementById('resultWrap').innerHTML = `<video src="${url}" controls autoplay loop muted style="width:100%;border-radius:8px"></video>
+      <div style="margin-top:8px;font-size:10px;color:var(--text3);text-align:center">✅ Trimmed to ${seconds}s — ready for ${platform}</div>`;
+    btn.textContent = `✅ ${seconds}s`;
+  } catch(e) {
+    alert('Trim failed: '+e.message);
+    btn.textContent = `✂️ ${seconds}s`;
+  }
+  btn.disabled = false;
+}
 function selMusic(id,el){
   state.selectedMusic=id;
   document.querySelectorAll('#musicTrackList .music-track').forEach(x=>x.classList.remove('mt-active'));

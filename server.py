@@ -60,6 +60,9 @@ ANIME_STYLES = {
     "manga":          {"name":"Manga",             "desc":"B&W ink, sharp outlines",                "icon":"📖", "color":"eq=contrast=2.2:saturation=0.0:brightness=0.04",                                                           "el":0.06, "eh":0.30},
     "ink_wash":       {"name":"Ink & Wash",        "desc":"Sumi-e brushwork, monochrome texture",   "icon":"🖌",  "color":"eq=contrast=1.8:saturation=0.15:brightness=-0.04",                                                         "el":0.07, "eh":0.28},
     "lofi_anime":     {"name":"Lo-Fi Anime",       "desc":"Muted tones, late-night vibe",           "icon":"🌙", "color":"eq=contrast=1.2:saturation=0.88:brightness=-0.02,hue=h=15:s=0.85",                                        "el":0.08, "eh":0.24},
+    "jojo":           {"name":"JoJo Bizarre",      "desc":"Hyper-contrast, bold drama (JoJo style)","icon":"💎", "color":"eq=contrast=2.1:saturation=2.6:brightness=0.01,hue=h=5:s=2.0",                                          "el":0.03, "eh":0.18},
+    "domo":           {"name":"DomoAI",             "desc":"Clean cel-shading, consistent character","icon":"🎭", "color":"eq=contrast=1.35:saturation=1.65:brightness=0.02",                                                       "el":0.06, "eh":0.26},
+    "luma_dream":     {"name":"Luma Dream",         "desc":"Motion-preserved dreamy restyle",        "icon":"✨", "color":"eq=contrast=1.22:saturation=1.45:brightness=0.04:gamma_r=1.04,unsharp=lx=2:ly=2:la=-0.15",              "el":0.07, "eh":0.22},
 }
 
 QUALITY_MAP = {
@@ -351,6 +354,7 @@ class Handler(BaseHTTPRequestHandler):
             routes = {
                 "/animate":  self._animate,
                 "/anime":    self._anime,
+                "/trim":     self._trim,
                 "/faceswap": self._faceswap,
                 "/bgswap":   self._bgswap,
                 "/retouch":  self._retouch,
@@ -835,6 +839,31 @@ class Handler(BaseHTTPRequestHandler):
         finally:
             try: os.unlink(photo_path)
             except: pass
+
+    # ── /trim ─────────────────────────────────────────────────────────────────
+    def _trim(self, fields, files):
+        """Trim a video to a specific duration for web platform upload prep."""
+        if "video" not in files and "photo" not in files:
+            return self._text("No video uploaded", 400)
+        key = "video" if "video" in files else "photo"
+        raw = self._save(files[key])
+        dur   = float(fields.get("duration", "5"))
+        start = float(fields.get("start", "0"))
+        out = tempfile.mktemp(suffix=".mp4", dir="/tmp")
+        try:
+            cmd = [FFMPEG, "-y", "-ss", str(start), "-i", raw,
+                   "-t", str(dur), "-c:v", "libx264", "-preset", "fast", "-crf", "18",
+                   "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", out]
+            r = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+            if r.returncode != 0: raise RuntimeError(r.stderr[-600:])
+            name = f"trim-{int(dur)}s-{int(time.time())}.mp4"
+            self._persist(out, name)
+            with open(out,"rb") as f: data = f.read()
+            self._binary(data, "video/mp4", name)
+        finally:
+            for p in [raw, out]:
+                try: os.unlink(p)
+                except: pass
 
     # ── /anime ────────────────────────────────────────────────────────────────
     def _anime(self, fields, files):
