@@ -79,7 +79,18 @@ def make_video_animation(src, style, quality, fmt, grade, vignette, grain, sharp
         "tiltshift":   f"{scale},vignette=PI/2.2,eq=contrast=1.05:saturation=0.95",
         "letterbox":   f"{scale},eq=contrast=1.12:saturation=0.90",
         "splitreveal":   f"{scale},eq=contrast=1.08:saturation=1.12",
-        "cyberpunk_city":f"{scale},hue=h='t*15':s=1.9,eq=contrast=1.3:brightness=-0.08:saturation=1.7",
+        "cyberpunk_city": f"{scale},hue=h='t*15':s=1.9,eq=contrast=1.3:brightness=-0.08:saturation=1.7",
+        # ── ANIMA / RÜFÜS / ODESZA arc ───────────────────────────────────────
+        "anima":          f"{scale},eq=contrast=1.18:saturation=0.75:brightness=-0.03",
+        "rufus":          f"{scale},eq=brightness=0.03:saturation=0.85:gamma_r=1.07:gamma_b=0.92",
+        "odesza":         f"{scale},eq=brightness=0.05:saturation=1.1:gamma_r=1.04",
+        "gravity_drift":  f"{scale},eq=contrast=1.08:saturation=0.88",
+        "still_wind":     f"{scale},eq=contrast=1.05:saturation=0.90",
+        "breathe_expand": f"{scale},eq=contrast=1.06:saturation=0.82",
+        "sculptural":     f"{scale},eq=contrast=1.65:saturation=0.55:brightness=-0.06",
+        "silhouette":     f"{scale},eq=contrast=2.0:saturation=0.15:brightness=-0.20",
+        "tension":        f"{scale},eq=contrast=1.35:saturation=0.60:gamma_b=1.12:brightness=-0.05",
+        "drop_bloom":     f"{scale},eq=brightness=0.12:contrast=1.20:saturation=1.25",
     }
 
     vf = VSTYLES.get(style, VSTYLES["kenburns"])
@@ -146,7 +157,18 @@ def make_animation(src, style, duration, quality, fmt, grade, vignette, grain, s
       "tiltshift":  f"scale={BIG}:{BIG},zoompan=z='1.05+0.05*on/{N}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps={fps},vignette=PI/2.2",
       "letterbox":  f"scale={BIG}:{BIG},zoompan=z='1.0+0.14*on/{N}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)-18*on/{N}':d=1:s={w}x{h}:fps={fps},eq=contrast=1.12",
       "splitreveal":   f"scale={BIG}:{BIG},zoompan=z='1.07':x='iw*0.07*on/{N}':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps={fps},eq=contrast=1.08:saturation=1.1",
-      "cyberpunk_city":f"scale={BIG}:{BIG},zoompan=z='1.06+0.02*sin(2*3.14159*on/({fps*3}))':x='iw/2-(iw/zoom/2)+iw*0.04*sin(2*3.14159*on/{N})':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps={fps},hue=h='t*15':s=1.9,eq=contrast=1.3:brightness=-0.08:saturation=1.7",
+      "cyberpunk_city":  f"scale={BIG}:{BIG},zoompan=z='1.06+0.02*sin(2*3.14159*on/({fps*3}))':x='iw/2-(iw/zoom/2)+iw*0.04*sin(2*3.14159*on/{N})':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps={fps},hue=h='t*15':s=1.9,eq=contrast=1.3:brightness=-0.08:saturation=1.7",
+      # ── ANIMA / RÜFÜS / ODESZA arc ─────────────────────────────────────────
+      "anima":           f"scale={BIG}:{BIG},zoompan=z='1.0+0.07*on/{N}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)-10*on/{N}':d=1:s={w}x{h}:fps={fps},eq=contrast=1.18:saturation=0.75:brightness=-0.03",
+      "rufus":           f"scale={BIG}:{BIG},zoompan=z='1.06+0.02*sin(2*3.14159*on/({fps*10}))':x='iw/2-(iw/zoom/2)+iw*0.025*sin(2*3.14159*on/{N})':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps={fps},eq=brightness=0.03:saturation=0.85:gamma_r=1.07:gamma_b=0.92",
+      "odesza":          f"scale={BIG}:{BIG},zoompan=z='1.0+0.09*on/{N}':x='iw/2-(iw/zoom/2)+iw*0.04*on/{N}':y='max(0,ih/2-(ih/zoom/2)-18*on/{N})':d=1:s={w}x{h}:fps={fps},eq=brightness=0.05:saturation=1.1:gamma_r=1.04",
+      "gravity_drift":   f"scale={BIG}:{BIG},zoompan=z='1.05+0.015*sin(2*3.14159*on/({fps*10}))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)+14*sin(2*3.14159*on/({fps*9}))':d=1:s={w}x{h}:fps={fps},eq=contrast=1.08:saturation=0.88",
+      "still_wind":      f"scale={BIG}:{BIG},zoompan=z='1.06':x='iw/2-(iw/zoom/2)+iw*0.04*sin(2*3.14159*on/({int(N*1.8)}))':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps={fps},eq=contrast=1.05:saturation=0.90",
+      "breathe_expand":  f"scale={BIG}:{BIG},zoompan=z='1.03+0.04*sin(2*3.14159*on/({fps*14}))':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps={fps},eq=contrast=1.06:saturation=0.82",
+      "sculptural":      f"scale={BIG}:{BIG},zoompan=z='1.0+0.08*on/{N}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps={fps},eq=contrast=1.65:saturation=0.55:brightness=-0.06",
+      "silhouette":      f"scale={BIG}:{BIG},zoompan=z='1.02+0.05*on/{N}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps={fps},eq=contrast=2.0:saturation=0.15:brightness=-0.20",
+      "tension":         f"scale={BIG}:{BIG},zoompan=z='1.0+0.04*on/{N}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps={fps},eq=contrast=1.35:saturation=0.60:gamma_b=1.12:brightness=-0.05",
+      "drop_bloom":      f"scale={BIG}:{BIG},zoompan=z='1.0+0.28*on/{N}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps={fps},eq=brightness=0.12:contrast=1.20:saturation=1.25",
     }
     filters = [S.get(style, S["kenburns"])]
     if grade   == "1" and "eq=" not in filters[0]: filters.append("eq=contrast=1.10:saturation=1.15")

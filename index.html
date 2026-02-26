@@ -351,6 +351,27 @@ select{background:var(--card2);color:var(--text);cursor:pointer}
 @keyframes sp{0%,100%{clip-path:inset(0 55% 0 55%)}50%{clip-path:inset(0 0 0 0)}}
 .d-cc{background:linear-gradient(180deg,#000010,#05001a,#0a0030,#150040);animation:cc 2.4s ease-in-out infinite}
 @keyframes cc{0%,100%{box-shadow:inset 0 0 18px #7c3aed,inset 0 0 35px #0066ff;transform:translateX(0);filter:hue-rotate(0deg)}50%{box-shadow:inset 0 0 35px #ff0099,inset 0 0 55px #00ccff;transform:translateX(-7%);filter:hue-rotate(40deg)}}
+/* ANIMA / RÜFÜS / ODESZA arc */
+.d-an{background:linear-gradient(160deg,#060615,#0d122a,#131830);animation:an 8s ease-in-out infinite alternate;filter:saturate(0.7)}
+@keyframes an{from{transform:scale(1) translateY(0)}to{transform:scale(1.1) translateY(-4%)}}
+.d-rf{background:linear-gradient(135deg,#1a0e06,#3a1e0a,#6a3410,#c06020);animation:rf 7s ease-in-out infinite alternate;filter:saturate(0.8)}
+@keyframes rf{0%{transform:scale(1.05) translateX(-2%)}100%{transform:scale(1.05) translateX(2%)}}
+.d-oz{background:linear-gradient(160deg,#060e1a,#0e2040,#1a3060,#c08040);animation:oz 8s ease-in-out infinite alternate}
+@keyframes oz{from{transform:scale(1) translate(-4%,2%)}to{transform:scale(1.1) translate(2%,-3%)}}
+.d-gd{background:linear-gradient(180deg,#060e14,#0a1a24,#102030);animation:gd 9s ease-in-out infinite;filter:saturate(0.85)}
+@keyframes gd{0%,100%{transform:translateY(0) scale(1.04)}50%{transform:translateY(-10px) scale(1.06)}}
+.d-sw{background:linear-gradient(180deg,#080812,#0d0d20,#12103a);animation:sw 6s ease-in-out infinite;filter:saturate(0.88)}
+@keyframes sw{0%,100%{transform:translateX(0)}33%{transform:translateX(-6%)}66%{transform:translateX(4%)}}
+.d-bx{background:linear-gradient(135deg,#060814,#0c1020,#080e1c);animation:bx 12s ease-in-out infinite;filter:saturate(0.78)}
+@keyframes bx{0%,100%{transform:scale(1.0)}50%{transform:scale(1.04)}}
+.d-sc{background:linear-gradient(135deg,#030303,#0a0a0a,#181818);animation:sc 7s ease-in-out infinite alternate;filter:contrast(1.7) saturate(0.4)}
+@keyframes sc{from{transform:scale(1)}to{transform:scale(1.1) translate(1%,-1%)}}
+.d-sil{background:linear-gradient(135deg,#000000,#040404,#080808);animation:sil 8s ease-in-out infinite alternate;filter:contrast(2.2) saturate(0.1) brightness(0.6)}
+@keyframes sil{from{transform:scale(1)}to{transform:scale(1.06)}}
+.d-tn{background:linear-gradient(135deg,#040810,#080f1c,#0c1428);animation:tn 10s linear infinite alternate;filter:saturate(0.55) hue-rotate(200deg)}
+@keyframes tn{from{transform:scale(1)}to{transform:scale(1.05)}}
+.d-db{background:radial-gradient(circle at 50% 50%,#fffbe8 0%,#f0c060 20%,#c08020 50%,#1a0a00 100%);animation:db 3s ease-in-out infinite alternate}
+@keyframes db{from{transform:scale(1);filter:brightness(0.7)}to{transform:scale(1.2);filter:brightness(1.6)}}
 
 /* Settings view */
 .settings-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
@@ -646,7 +667,18 @@ const ANIMS = [
   {id:'tiltshift', name:'Tilt Shift',      desc:'Miniature world depth',       cls:'d-ts', badge:null},
   {id:'letterbox', name:'Letterbox',       desc:'Widescreen cinema bars',      cls:'d-lb', badge:'PRO',  bc:'badge-pro'},
   {id:'splitreveal',   name:'Split Reveal',       desc:'Dual panel cinematic open',     cls:'d-sp', badge:null},
-  {id:'cyberpunk_city',name:'Cyberpunk City',     desc:'Neon streets, hue-cycled glow',  cls:'d-cc', badge:'HOT',  bc:'badge-hot'},
+  {id:'cyberpunk_city',  name:'Cyberpunk City',    desc:'Neon streets, hue-cycled glow',    cls:'d-cc',  badge:'HOT',  bc:'badge-hot'},
+  // ── ANIMA / RÜFÜS / ODESZA emotional arc ────────────────────────────────
+  {id:'anima',           name:'ANIMA',             desc:'Atmospheric slow push + lift',     cls:'d-an',  badge:'NEW',  bc:'badge-new'},
+  {id:'rufus',           name:'RÜFÜS Orbit',       desc:'Warm orbital drift, gentle sway',  cls:'d-rf',  badge:'NEW',  bc:'badge-new'},
+  {id:'odesza',          name:'ODESZA Sweep',      desc:'Epic wide pan + lift reveal',      cls:'d-oz',  badge:'NEW',  bc:'badge-new'},
+  {id:'gravity_drift',   name:'Gravity Drift',     desc:'Float that lingers too long',      cls:'d-gd',  badge:null},
+  {id:'still_wind',      name:'Still Wind',        desc:'Subject still, world moves',       cls:'d-sw',  badge:null},
+  {id:'breathe_expand',  name:'Breathe',           desc:'Barely perceptible expansion',     cls:'d-bx',  badge:null},
+  {id:'sculptural',      name:'Sculptural',        desc:'High contrast, deep shadow drama', cls:'d-sc',  badge:'PRO',  bc:'badge-pro'},
+  {id:'silhouette',      name:'Silhouette',        desc:'Near-dark backlit edge drama',     cls:'d-sil', badge:'PRO',  bc:'badge-pro'},
+  {id:'tension',         name:'Tension',           desc:'Cool creep zoom, pre-drop feel',   cls:'d-tn',  badge:null},
+  {id:'drop_bloom',      name:'Drop Bloom',        desc:'Light bursts at the drop',         cls:'d-db',  badge:'HOT',  bc:'badge-hot'},
 ];
 
 const MAG_TEMPLATES = [
