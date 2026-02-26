@@ -24,6 +24,7 @@ MUSIC_TRACKS = {
     "gravity_float":  {"name":"Gravity Float",   "desc":"Slow-fall ambient texture", "color":"#001818", "icon":"🍃"},
     "tension_drone":  {"name":"Tension Drone",   "desc":"Pre-drop dissonant creep",  "color":"#08080e", "icon":"⚡"},
     "drop_pulse":     {"name":"Drop Pulse",      "desc":"Bass pulse at the drop",    "color":"#1a0010", "icon":"💥"},
+    "innerbloom_arp": {"name":"Innerbloom",      "desc":"Dm7 pad — the 5:46 moment", "color":"#1a0c06", "icon":"🌸"},
 }
 # expr, lowpass_hz, aecho_params, volume
 MUSIC_EXPRS = {
@@ -33,6 +34,7 @@ MUSIC_EXPRS = {
     "gravity_float":  ("0.3*sin(2*PI*40*t)+0.2*sin(2*PI*55*t)+0.1*sin(2*PI*80*t)",         600,  "0.9:0.92:100:0.5", 0.40),
     "tension_drone":  ("0.3*sin(2*PI*73.4*t)+0.2*sin(2*PI*77.8*t)+0.1*sin(2*PI*146.8*t)", 500,  "0.6:0.8:50:0.3",   0.40),
     "drop_pulse":     ("0.4*sin(2*PI*55*t)+0.2*sin(2*PI*110*t)",                            400,  "0.5:0.7:40:0.2",   0.55),
+    "innerbloom_arp": ("0.22*sin(2*PI*146.8*t)+0.18*sin(2*PI*220*t)+0.14*sin(2*PI*261.6*t)+0.10*sin(2*PI*329.6*t)+0.06*sin(2*PI*440*t)", 3500, "0.88:0.94:150:0.65", 0.45),
 }
 
 def ensure_music_tracks():
@@ -127,6 +129,7 @@ def make_video_animation(src, style, quality, fmt, grade, vignette, grain, sharp
         "silhouette":     f"{scale},eq=contrast=2.0:saturation=0.15:brightness=-0.20",
         "tension":        f"{scale},eq=contrast=1.35:saturation=0.60:gamma_b=1.12:brightness=-0.05",
         "drop_bloom":     f"{scale},eq=brightness=0.12:contrast=1.20:saturation=1.25",
+        "innerbloom":     f"{scale},eq=contrast=1.10:saturation=0.90:brightness=0.04:gamma_r=1.06:gamma_b=0.94",
     }
 
     vf = VSTYLES.get(style, VSTYLES["kenburns"])
@@ -231,6 +234,8 @@ def make_animation(src, style, duration, quality, fmt, grade, vignette, grain, s
       "silhouette":      f"scale={BIG}:{BIG},zoompan=z='1.02+0.05*on/{N}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps={fps},eq=contrast=2.0:saturation=0.15:brightness=-0.20",
       "tension":         f"scale={BIG}:{BIG},zoompan=z='1.0+0.04*on/{N}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps={fps},eq=contrast=1.35:saturation=0.60:gamma_b=1.12:brightness=-0.05",
       "drop_bloom":      f"scale={BIG}:{BIG},zoompan=z='1.0+0.28*on/{N}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s={w}x{h}:fps={fps},eq=brightness=0.12:contrast=1.20:saturation=1.25",
+      # ── Innerbloom — 5:46 moment ────────────────────────────────────────────
+      "innerbloom":      f"scale={BIG}:{BIG},zoompan=z='max(1.0,1.18-0.18*on/{N})':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)+10*sin(2*3.14159*on/({fps*16}))':d=1:s={w}x{h}:fps={fps},eq=contrast=1.10:saturation=0.90:brightness=0.04:gamma_r=1.06:gamma_b=0.94",
     }
     filters = [S.get(style, S["kenburns"])]
     if grade   == "1" and "eq=" not in filters[0]: filters.append("eq=contrast=1.10:saturation=1.15")

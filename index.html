@@ -372,6 +372,8 @@ select{background:var(--card2);color:var(--text);cursor:pointer}
 @keyframes tn{from{transform:scale(1)}to{transform:scale(1.05)}}
 .d-db{background:radial-gradient(circle at 50% 50%,#fffbe8 0%,#f0c060 20%,#c08020 50%,#1a0a00 100%);animation:db 3s ease-in-out infinite alternate}
 @keyframes db{from{transform:scale(1);filter:brightness(0.7)}to{transform:scale(1.2);filter:brightness(1.6)}}
+.d-ib{background:linear-gradient(135deg,#0e0804,#1e1008,#2e1c0e,#4e2c16);animation:ib 10s ease-in-out infinite alternate;filter:saturate(0.88)}
+@keyframes ib{from{transform:scale(1.18) translateY(1%);filter:brightness(0.75)saturate(0.85)}to{transform:scale(1.0) translateY(-1%);filter:brightness(1.08)saturate(0.92)}}
 
 /* ──── Music tracks ──── */
 .music-tracks{display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto}
@@ -692,6 +694,7 @@ const ANIMS = [
   {id:'silhouette',      name:'Silhouette',        desc:'Near-dark backlit edge drama',     cls:'d-sil', badge:'PRO',  bc:'badge-pro'},
   {id:'tension',         name:'Tension',           desc:'Cool creep zoom, pre-drop feel',   cls:'d-tn',  badge:null},
   {id:'drop_bloom',      name:'Drop Bloom',        desc:'Light bursts at the drop',         cls:'d-db',  badge:'HOT',  bc:'badge-hot'},
+  {id:'innerbloom',      name:'Innerbloom',        desc:'Slow pullback — the 5:46 moment',  cls:'d-ib',  badge:'🌸',   bc:'badge-pro'},
 ];
 
 const MAG_TEMPLATES = [
