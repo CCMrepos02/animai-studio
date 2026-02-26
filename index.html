@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AnimAI — AI Video Studio</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;user-select:none}
+:root{
+  --bg:#0e0e12;--panel:#141418;--panel2:#1a1a21;--card:#1f1f28;--card2:#252530;
+  --border:#2a2a38;--border2:#333345;
+  --accent:#7c5cfc;--accent2:#a78bfa;--a3:#5b8def;--a4:#e879f9;
+  --gold:#f59e0b;--green:#10b981;--red:#f43f5e;--orange:#f97316;
+  --text:#eeeef5;--text2:#9090b0;--text3:#55556a;
+  --glow:rgba(124,92,252,.3);--glow2:rgba(124,92,252,.12);
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+button,select,input{font-family:inherit;outline:none;border:none}
+select{background:var(--card2);color:var(--text);cursor:pointer}
+
+/* ──── TOP TOOLBAR ──── */
+.toolbar{height:50px;min-height:50px;background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:0;flex-shrink:0;z-index:100}
+.tb-logo{display:flex;align-items:center;gap:8px;padding:0 16px;border-right:1px solid var(--border);height:100%}
+.tb-logo-icon{width:28px;height:28px;background:linear-gradient(135deg,var(--accent),var(--a3));border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.tb-logo-text{font-weight:800;font-size:15px;background:linear-gradient(90deg,var(--accent2),var(--a3));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.tb-menu{display:flex;align-items:center;height:100%;border-right:1px solid var(--border)}
+.tb-menu-item{padding:0 14px;height:100%;display:flex;align-items:center;font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;transition:.15s}
+.tb-menu-item:hover{background:var(--panel2);color:var(--text)}
+.tb-proj{display:flex;align-items:center;gap:8px;padding:0 16px}
+.tb-proj input{background:transparent;border-bottom:1px solid var(--border2);color:var(--text);font-size:13px;padding:2px 4px;width:160px}
+.tb-proj input:focus{border-color:var(--accent)}
+.tb-center{flex:1;display:flex;align-items:center;justify-content:center;gap:10px}
+.tb-transport{display:flex;align-items:center;gap:4px}
+.tb-btn{width:32px;height:32px;background:var(--card2);border:1px solid var(--border);border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text2);transition:.15s}
+.tb-btn:hover{background:var(--card);color:var(--text);border-color:var(--border2)}
+.tb-btn.play{background:var(--accent);border-color:var(--accent);color:#fff}
+.tb-btn.play:hover{background:var(--accent2)}
+.tb-timecode{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:4px 10px;font-size:12px;font-family:monospace;color:var(--accent2);min-width:80px;text-align:center}
+.tb-right{display:flex;align-items:center;gap:8px;padding:0 16px;border-left:1px solid var(--border);margin-left:auto}
+.export-btn{background:linear-gradient(135deg,var(--accent),var(--a3));border:none;color:#fff;padding:7px 18px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;transition:.2s}
+.export-btn:hover{box-shadow:0 0 16px var(--glow);transform:translateY(-1px)}
+.tb-status{width:8px;height:8px;border-radius:50%;background:var(--green);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.tb-status-text{font-size:11px;color:var(--text3)}
+
+/* ──── MAIN AREA ──── */
+.workspace{flex:1;display:flex;overflow:hidden;min-height:0}
+
+/* ──── LEFT PANEL ──── */
+.left-panel{width:220px;min-width:220px;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.lp-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0}
+.lp-tab{flex:1;padding:9px 4px;font-size:10px;font-weight:700;text-align:center;cursor:pointer;color:var(--text3);transition:.15s;border-bottom:2px solid transparent;letter-spacing:.3px}
+.lp-tab:hover{color:var(--text2)}
+.lp-tab.active{color:var(--accent2);border-bottom-color:var(--accent)}
+.lp-content{flex:1;overflow-y:auto;padding:10px 8px}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}::-webkit-scrollbar-track{background:transparent}
+
+.lp-section{margin-bottom:14px}
+.lp-section-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;padding:4px 4px;margin-bottom:6px}
+.tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.tool-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:8px 6px;cursor:pointer;text-align:center;transition:.2s;display:flex;flex-direction:column;align-items:center;gap:4px}
+.tool-card:hover{background:var(--card2);border-color:var(--border2);transform:translateY(-1px)}
+.tool-card.active{background:var(--glow2);border-color:var(--accent)}
+.tool-card .tc-icon{font-size:20px;line-height:1}
+.tool-card .tc-name{font-size:10px;font-weight:600;color:var(--text2);line-height:1.2}
+.tool-card.active .tc-name{color:var(--accent2)}
+.tool-card .tc-badge{font-size:9px;padding:1px 5px;border-radius:3px;font-weight:700;margin-top:1px}
+.badge-hot{background:#dc2626;color:#fff}.badge-new{background:#059669;color:#fff}.badge-pro{background:var(--gold);color:#000}
+
+.media-upload-mini{background:var(--card);border:1px dashed var(--border2);border-radius:8px;padding:12px 8px;text-align:center;cursor:pointer;transition:.2s;position:relative}
+.media-upload-mini:hover{border-color:var(--accent);background:var(--glow2)}
+.media-upload-mini input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.media-upload-mini p{font-size:11px;color:var(--text3);margin-top:4px}
+
+.media-thumb-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:8px}
+.media-thumb{aspect-ratio:1;background:var(--card2);border-radius:5px;overflow:hidden;cursor:pointer;border:1px solid var(--border)}
+.media-thumb img{width:100%;height:100%;object-fit:cover}
+.media-thumb:hover{border-color:var(--accent)}
+
+.effect-list{display:flex;flex-direction:column;gap:4px}
+.effect-item{display:flex;align-items:center;gap:8px;padding:7px 8px;background:var(--card);border:1px solid var(--border);border-radius:7px;cursor:pointer;transition:.15s;font-size:11px;font-weight:500;color:var(--text2)}
+.effect-item:hover{background:var(--card2);color:var(--text);border-color:var(--border2)}
+.effect-item.active{background:var(--glow2);border-color:var(--accent);color:var(--accent2)}
+.effect-item .ei-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.effect-item .ei-dur{margin-left:auto;font-size:10px;color:var(--text3)}
+
+/* ──── CENTER PREVIEW ──── */
+.center-area{flex:1;display:flex;flex-direction:column;background:var(--bg);overflow:hidden;min-width:0}
+.preview-toolbar{height:38px;min-height:38px;background:var(--panel2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:0 12px;flex-shrink:0}
+.pt-label{font-size:11px;color:var(--text3);font-weight:600}
+.pt-ratio-group{display:flex;gap:3px}
+.pt-ratio{padding:3px 8px;background:var(--card);border:1px solid var(--border);border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;color:var(--text3);transition:.15s}
+.pt-ratio:hover{color:var(--text);border-color:var(--border2)}
+.pt-ratio.active{background:var(--glow2);border-color:var(--accent);color:var(--accent2)}
+.pt-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.pt-zoom{font-size:11px;color:var(--text3)}
+.fit-btn{padding:3px 10px;background:var(--card);border:1px solid var(--border);border-radius:4px;font-size:10px;cursor:pointer;color:var(--text2)}
+
+.preview-stage{flex:1;display:flex;align-items:center;justify-content:center;background:var(--bg);position:relative;overflow:hidden}
+.canvas-frame{position:relative;background:#000;border-radius:4px;box-shadow:0 0 0 1px var(--border2),0 20px 60px rgba(0,0,0,.5);transition:.3s;overflow:hidden}
+.canvas-frame video,
+.canvas-frame img#preview-media{width:100%;height:100%;object-fit:contain;display:block}
+.canvas-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer}
+.canvas-placeholder .cp-icon{font-size:40px;opacity:.3}
+.canvas-placeholder p{font-size:13px;color:var(--text3);text-align:center}
+.canvas-placeholder .cp-btn{padding:8px 20px;background:var(--accent);border-radius:6px;font-size:12px;font-weight:700;color:#fff;cursor:pointer}
+#canvas-file-input{display:none}
+
+.preview-controls{height:40px;min-height:40px;background:var(--panel);border-top:1px solid var(--border);display:flex;align-items:center;gap:10px;padding:0 12px;flex-shrink:0}
+.pc-scrubber{flex:1;height:4px;background:var(--border);border-radius:2px;cursor:pointer;position:relative}
+.pc-progress{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;width:0%;transition:.1s}
+.pc-handle{position:absolute;top:-5px;width:14px;height:14px;background:var(--accent);border-radius:50%;left:0%;transform:translateX(-50%);cursor:grab;border:2px solid #fff;box-shadow:0 0 6px var(--glow)}
+.pc-time{font-size:11px;font-family:monospace;color:var(--text2);min-width:65px}
+.vol-wrap{display:flex;align-items:center;gap:6px}
+.vol-wrap span{font-size:12px}
+.vol-slider{width:60px;accent-color:var(--accent)}
+
+/* ──── RIGHT PANEL ──── */
+.right-panel{width:270px;min-width:270px;background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.rp-header{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.rp-title{font-size:13px;font-weight:700}
+.rp-sub{font-size:11px;color:var(--text3)}
+.rp-content{flex:1;overflow-y:auto;padding:12px}
+
+.rp-field{margin-bottom:12px}
+.rp-field label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;display:block;margin-bottom:5px}
+.rp-field select,.rp-field input[type=text],.rp-field input[type=number]{width:100%;background:var(--card2);border:1px solid var(--border2);color:var(--text);padding:7px 10px;border-radius:7px;font-size:12px}
+.rp-field select:focus,.rp-field input:focus{border-color:var(--accent)}
+.range-row{display:flex;align-items:center;gap:8px}
+.range-row input[type=range]{flex:1;accent-color:var(--accent)}
+.range-row .rv{font-size:12px;font-weight:700;color:var(--accent2);min-width:34px;text-align:right}
+
+.toggle-grid{display:flex;flex-wrap:wrap;gap:5px}
+.tog{display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--card2);border:1px solid var(--border2);border-radius:6px;cursor:pointer;font-size:11px;font-weight:600;color:var(--text3);transition:.15s;user-select:none}
+.tog:hover{color:var(--text);border-color:var(--border)}
+.tog.on{background:var(--glow2);border-color:var(--accent);color:var(--accent2)}
+.tog .td{width:6px;height:6px;border-radius:50%;background:var(--text3);transition:.15s}
+.tog.on .td{background:var(--accent)}
+
+.rp-generate{padding:10px 14px;border-top:1px solid var(--border);flex-shrink:0}
+.gen-btn-full{width:100%;padding:12px;background:linear-gradient(135deg,var(--accent),var(--a3));border:none;color:#fff;font-size:13px;font-weight:700;border-radius:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:.2s;font-family:inherit}
+.gen-btn-full:hover{box-shadow:0 6px 24px var(--glow);transform:translateY(-1px)}
+.gen-btn-full:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+
+.prog-bar-wrap{margin-top:10px;display:none}
+.prog-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%;transition:width .4s;border-radius:3px}
+.prog-label{font-size:11px;color:var(--text2);margin-top:5px}
+.prog-step{font-size:10px;color:var(--text3);margin-top:2px}
+
+.result-area{padding:0 14px 10px;display:none}
+.result-img-wrap{border-radius:8px;overflow:hidden;border:1px solid var(--border2);position:relative}
+.result-img-wrap img,.result-img-wrap video{width:100%;display:block;border-radius:8px}
+.result-dl-btn{width:100%;margin-top:8px;padding:9px;background:var(--green);border:none;color:#fff;font-size:12px;font-weight:700;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;font-family:inherit}
+.result-dl-btn:hover{background:#0ca678}
+
+/* ──── TIMELINE ──── */
+.timeline{height:168px;min-height:168px;background:var(--panel);border-top:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.tl-header{height:32px;min-height:32px;display:flex;align-items:center;gap:0;border-bottom:1px solid var(--border);flex-shrink:0}
+.tl-track-labels{width:120px;min-width:120px;border-right:1px solid var(--border);height:100%;display:flex;align-items:center;padding:0 10px;flex-shrink:0}
+.tl-label-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px}
+.tl-ruler{flex:1;position:relative;overflow:hidden}
+.tl-ruler-marks{display:flex;align-items:flex-end;height:100%;padding:0 8px}
+.tl-mark{font-size:9px;color:var(--text3);flex:1;text-align:left}
+.tl-body{flex:1;display:flex;overflow:hidden}
+.tl-labels{width:120px;min-width:120px;border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.tl-track-label{height:44px;min-height:44px;display:flex;align-items:center;gap:8px;padding:0 10px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text2)}
+.tl-track-label .tl-icon{font-size:13px}
+.tl-track-label .tl-mute{width:18px;height:18px;background:var(--card2);border:1px solid var(--border2);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:9px;cursor:pointer;margin-left:auto;color:var(--text3)}
+.tl-tracks{flex:1;display:flex;flex-direction:column;overflow-x:auto;position:relative}
+.tl-track{height:44px;min-height:44px;border-bottom:1px solid var(--border);position:relative;background:var(--bg)}
+.tl-track:nth-child(odd){background:rgba(255,255,255,.012)}
+.tl-clip{position:absolute;top:5px;height:34px;border-radius:5px;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:700;overflow:hidden;cursor:pointer;border:1px solid rgba(255,255,255,.1);transition:.15s}
+.tl-clip:hover{filter:brightness(1.2)}
+.tl-clip-v{background:linear-gradient(135deg,rgba(91,141,239,.7),rgba(124,92,252,.5))}
+.tl-clip-a{background:linear-gradient(135deg,rgba(16,185,129,.5),rgba(6,148,105,.4))}
+.tl-clip-fx{background:linear-gradient(135deg,rgba(232,121,249,.5),rgba(167,139,250,.4))}
+.tl-playhead{position:absolute;top:0;bottom:0;width:1px;background:var(--red);z-index:10;pointer-events:none}
+.tl-playhead::before{content:'▼';position:absolute;top:-12px;left:-5px;font-size:10px;color:var(--red)}
+
+/* ──── FACE SWAP specific ──── */
+.dual-upload{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.mini-upload{background:var(--card2);border:1px dashed var(--border2);border-radius:8px;padding:10px 6px;text-align:center;cursor:pointer;transition:.2s;position:relative;min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.mini-upload:hover{border-color:var(--accent)}
+.mini-upload input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.mini-upload .mu-icon{font-size:22px}
+.mini-upload .mu-label{font-size:10px;font-weight:700;color:var(--text3)}
+.mini-upload img.mu-preview{width:100%;height:70px;object-fit:cover;border-radius:5px;display:none}
+
+/* Magazine templates */
+.mag-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+.mag-card{border-radius:7px;overflow:hidden;cursor:pointer;border:2px solid var(--border);transition:.2s;aspect-ratio:0.75}
+.mag-card:hover{border-color:var(--border2);transform:scale(1.02)}
+.mag-card.active{border-color:var(--accent);box-shadow:0 0 12px var(--glow)}
+.mag-inner{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:6px 4px 4px;position:relative;font-weight:900}
+.mg-vogue{background:linear-gradient(160deg,#1a0a2e,#4a1a5e,#8b2fc9)}
+.mg-si{background:linear-gradient(160deg,#1a0a0a,#7f0000,#cc0000)}
+.mg-maxim{background:linear-gradient(160deg,#1a0a00,#7a3500,#cc6600)}
+.mg-rs{background:linear-gradient(160deg,#0a0a0a,#500000,#990000)}
+.mg-forbes{background:linear-gradient(160deg,#0a0a0a,#600000,#bb0000)}
+.mag-title{font-size:10px;font-weight:900;color:#fff;text-align:center;letter-spacing:-0.5px;margin-bottom:2px}
+.mag-sub{font-size:7px;color:rgba(255,255,255,.6);text-align:center}
+.mag-body-ph{flex:1;width:80%;background:rgba(255,255,255,.1);border-radius:3px;margin-top:4px}
+
+/* BG preset grid */
+.bg-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:10px}
+.bg-swatch{border-radius:6px;aspect-ratio:1;cursor:pointer;border:2px solid var(--border);transition:.2s;display:flex;align-items:flex-end;padding:3px;overflow:hidden}
+.bg-swatch:hover{border-color:var(--border2);transform:scale(1.05)}
+.bg-swatch.active{border-color:var(--accent)}
+.bg-swatch span{font-size:8px;font-weight:700;color:rgba(255,255,255,.8);line-height:1.2;text-shadow:0 1px 2px rgba(0,0,0,.8)}
+.bg-beach{background:linear-gradient(160deg,#e4a244,#ff8228,#50aadc)}
+.bg-white{background:linear-gradient(160deg,#f0f0f2,#dcdce0,#c8c8cc)}
+.bg-city{background:linear-gradient(160deg,#080819,#121232,#232364)}
+.bg-forest{background:linear-gradient(160deg,#0f371e,#236b2a,#1a4a1a)}
+.bg-mountain{background:linear-gradient(160deg,#4b5f87,#5f7db0,#96b0dc)}
+.bg-space{background:linear-gradient(160deg,#040412,#09041c,#12082d)}
+.bg-sunset{background:linear-gradient(160deg,#ff5a28,#dc3250,#641450)}
+.bg-purple{background:linear-gradient(160deg,#370f73,#5f23c3,#23084b)}
+.bg-neon{background:linear-gradient(160deg,#08080e,#120826,#040408)}
+.bg-golden{background:linear-gradient(160deg,#e67a0a,#c85014,#641e3c)}
+
+/* Grade presets */
+.grade-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin-bottom:10px}
+.grade-swatch{border-radius:7px;padding:7px 6px;cursor:pointer;border:1px solid var(--border);transition:.2s;text-align:center;font-size:10px;font-weight:700}
+.grade-swatch:hover{border-color:var(--border2);transform:scale(1.02)}
+.grade-swatch.active{border-color:var(--accent);box-shadow:0 0 8px var(--glow)}
+.gs-cinema{background:linear-gradient(135deg,#0a0a14,#1a1a2e);color:#9090c0}
+.gs-warm{background:linear-gradient(135deg,#1a0a00,#3a1a05);color:#d4884a}
+.gs-cool{background:linear-gradient(135deg,#040a1a,#0a1830);color:#5a9ad4}
+.gs-vintage{background:linear-gradient(135deg,#1a160a,#2e2418);color:#c4a870}
+.gs-golden{background:linear-gradient(135deg,#1a0a00,#3a1800);color:#e4940a}
+.gs-night{background:linear-gradient(135deg,#04040c,#08081c);color:#5050a0}
+.gs-moody{background:linear-gradient(135deg,#0a0808,#181010);color:#887078}
+.gs-matte{background:linear-gradient(135deg,#181612,#28241e);color:#988870}
+.gs-hdr{background:linear-gradient(135deg,#040a1a,#1a0a00);color:#e890a0}
+.gs-pastel{background:linear-gradient(135deg,#180a1a,#0a1018);color:#c090d8}
+
+/* Resize view */
+.dim-grid{display:grid;grid-template-columns:1fr 20px 1fr;gap:4px;align-items:center;margin-bottom:10px}
+.dim-sep{text-align:center;color:var(--text3);font-size:12px}
+.preset-sizes{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px}
+.size-pill{padding:3px 8px;background:var(--card2);border:1px solid var(--border);border-radius:4px;font-size:10px;font-weight:700;cursor:pointer;color:var(--text3);transition:.15s}
+.size-pill:hover{color:var(--text);border-color:var(--border2)}
+.size-pill.active{background:var(--glow2);border-color:var(--accent);color:var(--accent2)}
+
+/* Projects view */
+.projects-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.proj-card{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;cursor:pointer;transition:.15s}
+.proj-card:hover{border-color:var(--border2)}
+.proj-thumb{height:72px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:24px;position:relative;overflow:hidden}
+.proj-thumb img,.proj-thumb video{width:100%;height:100%;object-fit:cover}
+.proj-type{position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.7);padding:2px 5px;border-radius:3px;font-size:9px;font-weight:700;color:#fff}
+.proj-info{padding:6px 8px}
+.proj-info .pn{font-size:10px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.proj-info .ps{font-size:9px;color:var(--text3)}
+.empty-state{text-align:center;padding:20px 10px;color:var(--text3);font-size:12px}
+.empty-state .es-icon{font-size:28px;margin-bottom:8px;opacity:.4}
+
+/* Retouch intensity */
+.intensity-row{display:flex;gap:5px;margin-bottom:10px}
+.int-btn{flex:1;padding:7px 4px;background:var(--card2);border:1px solid var(--border);border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;color:var(--text3);text-align:center;transition:.15s}
+.int-btn:hover{color:var(--text);border-color:var(--border2)}
+.int-btn.active{background:var(--glow2);border-color:var(--accent);color:var(--accent2)}
+
+/* ──── Style cards (animation) ──── */
+.anim-scroll{display:flex;flex-direction:column;gap:4px}
+.anim-item{display:flex;align-items:center;gap:8px;padding:7px 8px;background:var(--card);border:1.5px solid var(--border);border-radius:7px;cursor:pointer;transition:.15s}
+.anim-item:hover{background:var(--card2);border-color:var(--border2)}
+.anim-item.active{background:var(--glow2);border-color:var(--accent)}
+.anim-preview{width:36px;height:36px;border-radius:5px;flex-shrink:0;overflow:hidden}
+.anim-preview div{width:100%;height:100%}
+.ai-info .ai-name{font-size:11px;font-weight:700;color:var(--text)}
+.anim-item.active .ai-name{color:var(--accent2)}
+.ai-info .ai-desc{font-size:9px;color:var(--text3)}
+.ai-badge{margin-left:auto;font-size:9px;padding:1px 5px;border-radius:3px;font-weight:700}
+
+/* animation preview styles */
+.d-kb{background:linear-gradient(135deg,#1a1040,#4c1d95,#7c3aed);animation:kb 5s ease-in-out infinite alternate}
+@keyframes kb{from{transform:scale(1)}to{transform:scale(1.25) translate(-3%,-4%)}}
+.d-bw{background:linear-gradient(135deg,#7f1d1d,#dc2626,#f97316);animation:bw 4s ease-in-out infinite alternate}
+@keyframes bw{from{transform:scale(1.25)}to{transform:scale(1.0)}}
+.d-dr{background:linear-gradient(135deg,#022c22,#065f46,#059669);animation:dr 5s linear infinite alternate}
+@keyframes dr{from{transform:translateX(-10%)}to{transform:translateX(10%)}}
+.d-hb{background:linear-gradient(135deg,#2e1065,#6d28d9);animation:hb 2.5s ease-in-out infinite}
+@keyframes hb{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.d-hz{background:linear-gradient(135deg,#0c1445,#3b82f6);animation:hz 4s ease infinite alternate}
+@keyframes hz{from{transform:scale(1)}to{transform:scale(1.3)}}
+.d-fl{background:linear-gradient(135deg,#0c4a6e,#38bdf8);animation:fl 4s ease-in-out infinite}
+@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+.d-cp{background:linear-gradient(135deg,#1c1917,#78716c);animation:cp 5s ease-in-out infinite alternate}
+@keyframes cp{from{transform:scale(1) translateY(2%)}to{transform:scale(1.15) translateY(-4%)}}
+.d-gg{background:linear-gradient(135deg,#451a03,#fbbf24);animation:gg 3s ease-in-out infinite}
+@keyframes gg{0%,100%{filter:brightness(1)}50%{filter:brightness(1.35)saturate(1.6)}}
+.d-gl{background:linear-gradient(135deg,#1a0030,#7e22ce);animation:gl 0.4s steps(1) infinite}
+@keyframes gl{0%,100%{transform:none}40%{transform:translateX(-6px)skew(-4deg)}70%{transform:translateX(5px)skew(3deg)}}
+.d-vx{background:conic-gradient(from 0deg,#1a0040,#7c3aed,#a855f7,#1a0040);animation:vx 6s linear infinite}
+@keyframes vx{from{transform:rotate(0)scale(1.5)}to{transform:rotate(360deg)scale(1.5)}}
+.d-wr{background:linear-gradient(135deg,#0f172a,#475569);animation:wr 4s ease-in-out infinite alternate}
+@keyframes wr{from{clip-path:inset(0 70% 0 0)}to{clip-path:inset(0 0 0 0)}}
+.d-np{background:#070713;animation:np 1.8s ease-in-out infinite}
+@keyframes np{0%,100%{box-shadow:inset 0 0 30px #7c3aed}50%{box-shadow:inset 0 0 70px #a855f7,inset 0 0 20px #e879f9}}
+
+/* Settings view */
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.settings-row:last-child{border-bottom:none}
+.sr-label{font-size:12px;font-weight:600}
+.sr-sub{font-size:10px;color:var(--text3);margin-top:2px}
+.toggle-switch{width:36px;height:20px;background:var(--border2);border-radius:10px;cursor:pointer;position:relative;transition:.2s}
+.toggle-switch.on{background:var(--accent)}
+.toggle-switch::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.2s}
+.toggle-switch.on::after{left:18px}
+</style>
+</head>
+<body>
+
+<!-- TOP TOOLBAR -->
+<div class="toolbar">
+  <div class="tb-logo">
+    <div class="tb-logo-icon">✨</div>
+    <div class="tb-logo-text">AnimAI</div>
+  </div>
+  <div class="tb-menu">
+    <div class="tb-menu-item">File</div>
+    <div class="tb-menu-item">Edit</div>
+    <div class="tb-menu-item">View</div>
+    <div class="tb-menu-item">Export</div>
+  </div>
+  <div class="tb-proj">
+    <input type="text" id="projName" value="Untitled Project">
+  </div>
+  <div class="tb-center">
+    <div class="tb-transport">
+      <button class="tb-btn" onclick="skipBack()" title="Skip to start">⏮</button>
+      <button class="tb-btn" onclick="stepBack()" title="Back 1 frame">◀</button>
+      <button class="tb-btn play" id="playBtn" onclick="togglePlay()">▶</button>
+      <button class="tb-btn" onclick="stepFwd()" title="Forward 1 frame">▶</button>
+      <button class="tb-btn" onclick="skipFwd()" title="Skip to end">⏭</button>
+    </div>
+    <div class="tb-timecode" id="timecode">00:00:00</div>
+  </div>
+  <div class="tb-right">
+    <div class="tb-status" id="serverDot"></div>
+    <span class="tb-status-text" id="serverText">Connecting...</span>
+    <button class="export-btn" onclick="exportProject()">⬆ Export</button>
+  </div>
+</div>
+
+<!-- WORKSPACE -->
+<div class="workspace">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="lp-tabs">
+      <div class="lp-tab active" onclick="lpTab(this,'media')" title="Media">MEDIA</div>
+      <div class="lp-tab" onclick="lpTab(this,'tools')" title="AI Tools">AI</div>
+      <div class="lp-tab" onclick="lpTab(this,'fx')" title="Effects">FX</div>
+      <div class="lp-tab" onclick="lpTab(this,'projects')" title="Projects">FILES</div>
+    </div>
+    <div class="lp-content">
+
+      <!-- MEDIA TAB -->
+      <div id="lp-media" class="lp-pane">
+        <div class="media-upload-mini" onclick="document.getElementById('canvas-file-input').click()">
+          <input type="file" id="main-file-input" accept="image/*,video/*" onchange="handleMainUpload(this)">
+          <div style="font-size:24px">📁</div>
+          <p>Drop or click to import</p>
+        </div>
+        <div style="margin-top:10px">
+          <div class="lp-section-title">Recent Media</div>
+          <div class="media-thumb-grid" id="recentGrid"></div>
+        </div>
+        <div style="margin-top:10px">
+          <div class="lp-section-title">Current Project</div>
+          <div id="projectMediaList" style="font-size:11px;color:var(--text3);text-align:center;padding:10px 0">No media added</div>
+        </div>
+      </div>
+
+      <!-- AI TOOLS TAB -->
+      <div id="lp-tools" class="lp-pane" style="display:none">
+        <div class="lp-section-title">AI Tools</div>
+        <div class="tool-grid">
+          <div class="tool-card active" onclick="selectTool('animator',this)"><div class="tc-icon">🎬</div><div class="tc-name">Animator</div><div class="tc-badge badge-hot">HOT</div></div>
+          <div class="tool-card" onclick="selectTool('faceswap',this)"><div class="tc-icon">🔄</div><div class="tc-name">Face Swap</div></div>
+          <div class="tool-card" onclick="selectTool('magazine',this)"><div class="tc-icon">📰</div><div class="tc-name">Magazine</div></div>
+          <div class="tool-card" onclick="selectTool('bgswap',this)"><div class="tc-icon">🖼️</div><div class="tc-name">BG Swap</div><div class="tc-badge badge-new">NEW</div></div>
+          <div class="tool-card" onclick="selectTool('retouch',this)"><div class="tc-icon">💆</div><div class="tc-name">Retouch</div></div>
+          <div class="tool-card" onclick="selectTool('grade',this)"><div class="tc-icon">🎨</div><div class="tc-name">Color Grade</div></div>
+          <div class="tool-card" onclick="selectTool('resize',this)"><div class="tc-icon">📐</div><div class="tc-name">Resize</div><div class="tc-badge badge-pro">FREE</div></div>
+          <div class="tool-card" onclick="selectTool('settings',this)"><div class="tc-icon">⚙️</div><div class="tc-name">Settings</div></div>
+        </div>
+      </div>
+
+      <!-- FX TAB -->
+      <div id="lp-fx" class="lp-pane" style="display:none">
+        <div class="lp-section-title">Animation Styles</div>
+        <div class="anim-scroll" id="animList"></div>
+      </div>
+
+      <!-- FILES TAB -->
+      <div id="lp-projects" class="lp-pane" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div class="lp-section-title" style="margin:0">Output Files</div>
+          <span style="font-size:10px;color:var(--accent2);cursor:pointer" onclick="loadFiles()">⟳ Refresh</span>
+        </div>
+        <div class="projects-grid" id="filesGrid">
+          <div class="empty-state" style="grid-column:span 2"><div class="es-icon">📂</div>No files yet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER PREVIEW -->
+  <div class="center-area">
+    <div class="preview-toolbar">
+      <span class="pt-label">CANVAS</span>
+      <div class="pt-ratio-group">
+        <div class="pt-ratio active" onclick="setRatio('16:9',this)">16:9</div>
+        <div class="pt-ratio" onclick="setRatio('1:1',this)">1:1</div>
+        <div class="pt-ratio" onclick="setRatio('9:16',this)">9:16</div>
+        <div class="pt-ratio" onclick="setRatio('4:3',this)">4:3</div>
+      </div>
+      <div class="pt-right">
+        <span class="pt-zoom" id="zoomLabel">Fit</span>
+        <button class="fit-btn" onclick="fitCanvas()">Fit</button>
+      </div>
+    </div>
+
+    <div class="preview-stage" id="previewStage">
+      <div class="canvas-frame" id="canvasFrame" style="width:640px;height:360px">
+        <div class="canvas-placeholder" id="canvasPlaceholder" onclick="document.getElementById('canvas-file-input').click()">
+          <input type="file" id="canvas-file-input" accept="image/*,video/*" onchange="handleMainUpload(this)">
+          <div class="cp-icon">🎬</div>
+          <p>Drop a photo or video<br>to get started</p>
+          <div class="cp-btn">Import Media</div>
+        </div>
+        <img id="preview-media" style="display:none;width:100%;height:100%;object-fit:contain" alt="">
+        <video id="preview-video" style="display:none;width:100%;height:100%;object-fit:contain" loop muted></video>
+      </div>
+    </div>
+
+    <div class="preview-controls">
+      <button class="tb-btn" onclick="skipBack()" style="width:26px;height:26px;font-size:11px">⏮</button>
+      <button class="tb-btn play" id="pcPlayBtn" onclick="togglePlay()" style="width:26px;height:26px;font-size:11px">▶</button>
+      <span class="pc-time" id="pcTime">0:00 / 0:00</span>
+      <div class="pc-scrubber" id="scrubber" onclick="scrub(event)">
+        <div class="pc-progress" id="scrubProgress"></div>
+        <div class="pc-handle" id="scrubHandle"></div>
+      </div>
+      <div class="vol-wrap">
+        <span>🔊</span>
+        <input type="range" class="vol-slider" min="0" max="100" value="80" oninput="setVol(this.value)">
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="rp-header">
+      <div>
+        <div class="rp-title" id="rpTitle">🎬 Photo Animator</div>
+        <div class="rp-sub" id="rpSub">Animate any photo with AI</div>
+      </div>
+    </div>
+    <div class="rp-content" id="rpContent"><!-- dynamic per tool --></div>
+    <div class="rp-generate" id="rpGenerate">
+      <button class="gen-btn-full" id="genBtn" onclick="generate()">🚀 Generate</button>
+      <div class="prog-bar-wrap" id="progWrap">
+        <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+        <div class="prog-label" id="progLabel">Processing...</div>
+        <div class="prog-step"  id="progStep">Setting up pipeline</div>
+      </div>
+    </div>
+    <div class="result-area" id="resultArea">
+      <div class="result-img-wrap" id="resultWrap"></div>
+      <button class="result-dl-btn" id="dlBtn" onclick="dlResult()">⬇ Download</button>
+    </div>
+  </div>
+</div>
+
+<!-- TIMELINE -->
+<div class="timeline">
+  <div class="tl-header">
+    <div class="tl-track-labels"><span class="tl-label-title">Timeline</span></div>
+    <div class="tl-ruler">
+      <div class="tl-ruler-marks" id="rulerMarks"></div>
+    </div>
+  </div>
+  <div class="tl-body">
+    <div class="tl-labels">
+      <div class="tl-track-label"><span class="tl-icon">🎬</span>Video<div class="tl-mute" title="Hide">V</div></div>
+      <div class="tl-track-label"><span class="tl-icon">🔊</span>Audio<div class="tl-mute" title="Mute">M</div></div>
+      <div class="tl-track-label"><span class="tl-icon">✨</span>Effects<div class="tl-mute" title="Hide">E</div></div>
+    </div>
+    <div class="tl-tracks" id="tlTracks">
+      <div class="tl-track" id="trackVideo"></div>
+      <div class="tl-track" id="trackAudio"></div>
+      <div class="tl-track" id="trackFx"></div>
+      <div class="tl-playhead" id="playhead" style="left:0%"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────────────
+const state = {
+  activeTool: 'animator',
+  uploadedFile: null,
+  uploadedURL: null,
+  resultURL: null,
+  resultMime: null,
+  selectedStyle: 'kenburns',
+  selectedMagTemplate: 'vogue',
+  selectedBg: 'beach',
+  selectedGrade: 'cinematic',
+  selectedIntensity: 'medium',
+  resizeW: 1920, resizeH: 1080,
+  playing: false,
+  duration: 0,
+  currentTime: 0,
+  faceSourceFile: null,
+  faceTargetFile: null,
+};
+
+// ─── Tool definitions ─────────────────────────────────────────────────────────
+const TOOLS = {
+  animator: {title:'🎬 Photo Animator', sub:'Animate any photo with AI', btn:'🚀 Generate Animation'},
+  faceswap: {title:'🔄 Face Swap',       sub:'Swap faces with AI precision', btn:'🔄 Swap Faces'},
+  magazine: {title:'📰 Magazine Cover',  sub:'Create professional magazine covers', btn:'📰 Generate Cover'},
+  bgswap:   {title:'🖼️ Background Swap', sub:'Remove & replace backgrounds', btn:'🖼️ Swap Background'},
+  retouch:  {title:'💆 AI Retouch',      sub:'Professional skin & color retouch', btn:'✨ Retouch Photo'},
+  grade:    {title:'🎨 Color Grade',     sub:'Cinematic color grading presets', btn:'🎨 Apply Grade'},
+  resize:   {title:'📐 Resize & Convert',sub:'Resize, convert, crop any image', btn:'📐 Process Image'},
+  settings: {title:'⚙️ Settings',         sub:'Studio preferences', btn:null},
+};
+
+const ANIMS = [
+  {id:'kenburns',name:'Ken Burns',     desc:'Slow zoom + drift',      cls:'d-kb',badge:'HOT',  bc:'badge-hot'},
+  {id:'baywatch',name:'Baywatch',      desc:'Pull back reveal',       cls:'d-bw',badge:'HOT',  bc:'badge-hot'},
+  {id:'drift',   name:'Cinematic Drift',desc:'Smooth side pan',       cls:'d-dr',badge:null},
+  {id:'pulse',   name:'Heartbeat',     desc:'Breathing pulse',        cls:'d-hb',badge:null},
+  {id:'zoom',    name:'Hypno Zoom',    desc:'Constant slow zoom',     cls:'d-hz',badge:null},
+  {id:'float',   name:'Float',         desc:'Gentle up/down float',   cls:'d-fl',badge:'NEW',  bc:'badge-new'},
+  {id:'cinema',  name:'Cinema Push',   desc:'Dramatic push + lift',   cls:'d-cp',badge:'PRO',  bc:'badge-pro'},
+  {id:'warmglow',name:'Golden Glow',   desc:'Warm sunset pulse',      cls:'d-gg',badge:null},
+  {id:'glitch',  name:'Glitch Art',    desc:'Digital glitch effect',  cls:'d-gl',badge:null},
+  {id:'vortex',  name:'Vortex Spin',   desc:'Hypnotic rotation',      cls:'d-vx',badge:'NEW',  bc:'badge-new'},
+  {id:'reveal',  name:'Wipe Reveal',   desc:'Cinematic slide reveal', cls:'d-wr',badge:null},
+  {id:'neon',    name:'Neon Pulse',    desc:'Electric neon glow',     cls:'d-np',badge:null},
+];
+
+const MAG_TEMPLATES = [
+  {id:'vogue',      name:'VOGUE',      cls:'mg-vogue'},
+  {id:'si_swimsuit',name:'Sports Illustrated', cls:'mg-si'},
+  {id:'maxim',      name:'MAXIM',      cls:'mg-maxim'},
+  {id:'rolling_stone',name:'Rolling Stone', cls:'mg-rs'},
+  {id:'forbes',     name:'FORBES',     cls:'mg-forbes'},
+];
+
+const BG_PRESETS = [
+  {id:'beach',        cls:'bg-beach',  label:'Beach'},
+  {id:'studio_white', cls:'bg-white',  label:'Studio'},
+  {id:'city_night',   cls:'bg-city',   label:'City'},
+  {id:'forest',       cls:'bg-forest', label:'Forest'},
+  {id:'mountain',     cls:'bg-mountain',label:'Mountain'},
+  {id:'space',        cls:'bg-space',  label:'Space'},
+  {id:'sunset',       cls:'bg-sunset', label:'Sunset'},
+  {id:'purple_gradient',cls:'bg-purple',label:'Purple'},
+  {id:'neon_dark',    cls:'bg-neon',   label:'Neon'},
+  {id:'golden_hour',  cls:'bg-golden', label:'Golden'},
+];
+
+const GRADE_PRESETS = [
+  {id:'cinematic',   name:'Cinematic', cls:'gs-cinema'},
+  {id:'warm',        name:'Warm',      cls:'gs-warm'},
+  {id:'cool',        name:'Cool',      cls:'gs-cool'},
+  {id:'vintage',     name:'Vintage',   cls:'gs-vintage'},
+  {id:'golden_hour', name:'Golden Hr', cls:'gs-golden'},
+  {id:'night',       name:'Night',     cls:'gs-night'},
+  {id:'moody',       name:'Moody',     cls:'gs-moody'},
+  {id:'matte',       name:'Matte',     cls:'gs-matte'},
+  {id:'hdr',         name:'HDR',       cls:'gs-hdr'},
+  {id:'pastel',      name:'Pastel',    cls:'gs-pastel'},
+];
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+window.onload = () => {
+  buildAnimList();
+  renderTool('animator');
+  buildRuler();
+  checkServer();
+  setInterval(checkServer, 5000);
+  loadFiles();
+};
+
+// ─── Left Panel Tabs ──────────────────────────────────────────────────────────
+function lpTab(el, tab) {
+  document.querySelectorAll('.lp-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.lp-pane').forEach(p=>p.style.display='none');
+  document.getElementById('lp-'+tab).style.display='block';
+  if(tab==='projects') loadFiles();
+}
+
+// ─── Tool Selection ───────────────────────────────────────────────────────────
+function selectTool(tool, cardEl) {
+  state.activeTool = tool;
+  document.querySelectorAll('.tool-card').forEach(c=>c.classList.remove('active'));
+  if(cardEl) cardEl.classList.add('active');
+  renderTool(tool);
+  // Switch to AI tab
+  document.querySelectorAll('.lp-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.lp-tab')[1].classList.add('active');
+  document.querySelectorAll('.lp-pane').forEach(p=>p.style.display='none');
+  document.getElementById('lp-tools').style.display='block';
+}
+
+function renderTool(tool) {
+  const t = TOOLS[tool];
+  document.getElementById('rpTitle').textContent = t.title;
+  document.getElementById('rpSub').textContent   = t.sub;
+  const genBtn = document.getElementById('genBtn');
+  const rpGen  = document.getElementById('rpGenerate');
+  if(t.btn) { genBtn.textContent=t.btn; rpGen.style.display='block'; }
+  else rpGen.style.display = (tool==='settings') ? 'none' : 'block';
+  document.getElementById('progWrap').style.display='none';
+  document.getElementById('resultArea').style.display='none';
+  const content = document.getElementById('rpContent');
+  content.innerHTML = buildPanel(tool);
+  attachPanelEvents(tool);
+}
+
+function buildPanel(tool) {
+  const uploadZone = `
+    <div class="rp-field">
+      <label>Photo</label>
+      <div class="media-upload-mini" onclick="document.getElementById('rp-file-${tool}').click()" id="rpUpload-${tool}" style="${state.uploadedURL?'border-color:var(--accent)':''}">
+        <input type="file" id="rp-file-${tool}" accept="image/*" onchange="handleRpUpload(this,'${tool}')">
+        ${state.uploadedURL
+          ? `<img src="${state.uploadedURL}" style="width:100%;height:80px;object-fit:cover;border-radius:5px">`
+          : `<div style="font-size:22px">📸</div><p style="font-size:10px;color:var(--text3)">Click to upload photo</p>`}
+      </div>
+    </div>`;
+
+  if(tool==='animator') return `
+    ${uploadZone}
+    <div class="rp-field"><label>Animation Style</label></div>
+    <div class="anim-scroll" id="rpAnimList">${ANIMS.map(a=>`
+      <div class="anim-item${a.id===state.selectedStyle?' active':''}" onclick="selStyle('${a.id}',this)">
+        <div class="anim-preview"><div class="${a.cls}"></div></div>
+        <div class="ai-info"><div class="ai-name">${a.name}</div><div class="ai-desc">${a.desc}</div></div>
+        ${a.badge?`<span class="ai-badge ${a.bc}">${a.badge}</span>`:''}
+      </div>`).join('')}
+    </div>
+    <div class="rp-field" style="margin-top:10px"><label>Duration</label>
+      <div class="range-row"><input type="range" id="durSlider" min="3" max="30" value="8" oninput="document.getElementById('durVal').textContent=this.value+'s'">
+      <span class="rv" id="durVal">8s</span></div>
+    </div>
+    <div class="rp-field"><label>Quality</label>
+      <select id="qualSel"><option value="youtube">▶️ YouTube 1080p</option><option value="ytshorts">📱 YouTube Shorts</option><option value="medium" selected>HD 720p</option><option value="high">4K 1080p</option><option value="low">Fast 480p</option></select>
+    </div>
+    <div class="rp-field"><label>Format</label>
+      <select id="fmtSel"><option value="youtube">YouTube 16:9</option><option value="ytshorts">Shorts 9:16</option><option value="mp4">Landscape</option><option value="square">Square 1:1</option><option value="vertical">Vertical 9:16</option></select>
+    </div>
+    <div class="rp-field"><label>Enhancements</label>
+      <div class="toggle-grid">
+        <div class="tog on" id="tog-grade"   onclick="this.classList.toggle('on')"><div class="td"></div>Grade</div>
+        <div class="tog on" id="tog-vig"     onclick="this.classList.toggle('on')"><div class="td"></div>Vignette</div>
+        <div class="tog on" id="tog-sharp"   onclick="this.classList.toggle('on')"><div class="td"></div>Sharpen</div>
+        <div class="tog"    id="tog-grain"   onclick="this.classList.toggle('on')"><div class="td"></div>Grain</div>
+      </div>
+    </div>`;
+
+  if(tool==='faceswap') return `
+    <div class="rp-field"><label>Source Face (to apply)</label>
+      <div class="dual-upload">
+        <div class="mini-upload" id="fsSource" onclick="document.getElementById('fs-source-file').click()">
+          <input type="file" id="fs-source-file" accept="image/*" onchange="handleFsUpload(this,'source')">
+          <img class="mu-preview" id="fs-src-preview"><div class="mu-icon">😊</div><div class="mu-label">Source Face</div>
+        </div>
+        <div class="mini-upload" id="fsTarget" onclick="document.getElementById('fs-target-file').click()">
+          <input type="file" id="fs-target-file" accept="image/*" onchange="handleFsUpload(this,'target')">
+          <img class="mu-preview" id="fs-tgt-preview"><div class="mu-icon">🖼️</div><div class="mu-label">Target Photo</div>
+        </div>
+      </div>
+    </div>
+    <div class="rp-field" style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px">
+      <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">⚡ How it works</div>
+      <div style="font-size:10px;color:var(--text3);line-height:1.7">1. Upload the face you want to use<br>2. Upload the target photo<br>3. AI maps face precisely onto target<br>4. Auto-sharpening applied</div>
+    </div>`;
+
+  if(tool==='magazine') return `
+    ${uploadZone}
+    <div class="rp-field"><label>Magazine Template</label>
+      <div class="mag-grid">${MAG_TEMPLATES.map(m=>`
+        <div class="mag-card${m.id===state.selectedMagTemplate?' active':''}" onclick="selMag('${m.id}',this)">
+          <div class="mag-inner ${m.cls}">
+            <div class="mag-title">${m.name}</div>
+            <div class="mag-sub">2026 EDITION</div>
+            <div class="mag-body-ph"></div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+
+  if(tool==='bgswap') return `
+    ${uploadZone}
+    <div class="rp-field"><label>Background</label>
+      <div class="bg-grid">${BG_PRESETS.map(b=>`
+        <div class="bg-swatch ${b.cls}${b.id===state.selectedBg?' active':''}" onclick="selBg('${b.id}',this)" title="${b.label}">
+          <span>${b.label}</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+
+  if(tool==='retouch') return `
+    ${uploadZone}
+    <div class="rp-field"><label>Intensity</label>
+      <div class="intensity-row">
+        <div class="int-btn${state.selectedIntensity==='light'?' active':''}" onclick="selInt('light',this)">Light</div>
+        <div class="int-btn${state.selectedIntensity==='medium'?' active':''}" onclick="selInt('medium',this)">Medium</div>
+        <div class="int-btn${state.selectedIntensity==='heavy'?' active':''}" onclick="selInt('heavy',this)">Heavy</div>
+      </div>
+    </div>
+    <div style="background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:10px">
+      <div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px">✨ Retouch Pipeline</div>
+      <div style="font-size:10px;color:var(--text3);line-height:1.8">① Frequency separation skin smooth<br>② Editorial color grade<br>③ Clarity & sharpening<br>④ Warm skin tone lift<br>⑤ Cinematic vignette</div>
+    </div>`;
+
+  if(tool==='grade') return `
+    ${uploadZone}
+    <div class="rp-field"><label>Color Grade Preset</label>
+      <div class="grade-grid">${GRADE_PRESETS.map(g=>`
+        <div class="grade-swatch ${g.cls}${g.id===state.selectedGrade?' active':''}" onclick="selGrade('${g.id}',this)">${g.name}</div>`).join('')}
+      </div>
+    </div>`;
+
+  if(tool==='resize') {
+    const presets = [
+      {label:'YouTube',w:1920,h:1080},{label:'Shorts',w:1080,h:1920},
+      {label:'Instagram',w:1080,h:1080},{label:'Twitter',w:1200,h:675},
+      {label:'4K',w:3840,h:2160},{label:'HD',w:1280,h:720},
+    ];
+    return `
+    ${uploadZone}
+    <div class="rp-field"><label>Presets</label>
+      <div class="preset-sizes">${presets.map(p=>`
+        <div class="size-pill" onclick="setSize(${p.w},${p.h},this)">${p.label}<br><span style="font-size:8px;color:var(--text3)">${p.w}×${p.h}</span></div>`).join('')}
+      </div>
+    </div>
+    <div class="rp-field"><label>Dimensions</label>
+      <div class="dim-grid">
+        <input type="number" id="resW" value="${state.resizeW}" min="1" max="9999" style="text-align:center">
+        <div class="dim-sep">×</div>
+        <input type="number" id="resH" value="${state.resizeH}" min="1" max="9999" style="text-align:center">
+      </div>
+    </div>
+    <div class="rp-field"><label>Mode</label>
+      <select id="resMode"><option value="fit">Fit (letterbox)</option><option value="fill">Fill (crop)</option><option value="stretch">Stretch</option></select>
+    </div>
+    <div class="rp-field"><label>Format</label>
+      <select id="resFmt"><option value="jpg">JPEG (smaller)</option><option value="png">PNG (lossless)</option><option value="webp">WebP (modern)</option></select>
+    </div>
+    <div class="rp-field"><label>Quality</label>
+      <div class="range-row"><input type="range" id="resQual" min="60" max="99" value="95" oninput="document.getElementById('resQualVal').textContent=this.value+'%'">
+      <span class="rv" id="resQualVal">95%</span></div>
+    </div>`;
+  }
+
+  if(tool==='settings') return `
+    <div class="settings-row">
+      <div><div class="sr-label">Server URL</div><div class="sr-sub">localhost:7474</div></div>
+      <div class="tb-status" id="settingsDot" style="width:10px;height:10px"></div>
+    </div>
+    <div class="settings-row">
+      <div><div class="sr-label">Auto-save outputs</div><div class="sr-sub">Save to ~/Desktop/photo-animator/output/</div></div>
+      <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div class="settings-row">
+      <div><div class="sr-label">Film grain</div><div class="sr-sub">Default off</div></div>
+      <div class="toggle-switch" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div class="settings-row">
+      <div><div class="sr-label">Show timeline</div><div class="sr-sub">Show at bottom</div></div>
+      <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div style="margin-top:14px">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:6px">OUTPUT DIRECTORY</div>
+      <div style="font-size:11px;background:var(--card2);border:1px solid var(--border2);border-radius:6px;padding:8px 10px;color:var(--text2)">~/Desktop/photo-animator/output/</div>
+    </div>`;
+  return '';
+}
+
+function attachPanelEvents(tool){}
+
+// ─── Build animation list in FX tab ──────────────────────────────────────────
+function buildAnimList() {
+  document.getElementById('animList').innerHTML = ANIMS.map(a=>`
+    <div class="anim-item${a.id===state.selectedStyle?' active':''}" onclick="selStyleFx('${a.id}',this)">
+      <div class="anim-preview"><div class="${a.cls}"></div></div>
+      <div class="ai-info"><div class="ai-name">${a.name}</div><div class="ai-desc">${a.desc}</div></div>
+      ${a.badge?`<span class="ai-badge ${a.bc}">${a.badge}</span>`:''}
+    </div>`).join('');
+}
+
+// ─── Selection helpers ────────────────────────────────────────────────────────
+function selStyle(id,el){ state.selectedStyle=id; document.querySelectorAll('#rpAnimList .anim-item').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
+function selStyleFx(id,el){ state.selectedStyle=id; document.querySelectorAll('#animList .anim-item').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
+function selMag(id,el){ state.selectedMagTemplate=id; document.querySelectorAll('.mag-card').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
+function selBg(id,el){ state.selectedBg=id; document.querySelectorAll('.bg-swatch').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
+function selGrade(id,el){ state.selectedGrade=id; document.querySelectorAll('.grade-swatch').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
+function selInt(v,el){ state.selectedIntensity=v; document.querySelectorAll('.int-btn').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
+function setSize(w,h,el){ state.resizeW=w; state.resizeH=h; const rw=document.getElementById('resW'),rh=document.getElementById('resH'); if(rw)rw.value=w; if(rh)rh.value=h; document.querySelectorAll('.size-pill').forEach(x=>x.classList.remove('active')); el.classList.add('active'); }
+
+// ─── File upload ──────────────────────────────────────────────────────────────
+function handleMainUpload(input) {
+  const file = input.files[0]; if(!file) return;
+  state.uploadedFile = file;
+  state.uploadedURL  = URL.createObjectURL(file);
+  const ph  = document.getElementById('canvasPlaceholder');
+  const img = document.getElementById('preview-media');
+  const vid = document.getElementById('preview-video');
+  ph.style.display = 'none';
+  if(file.type.startsWith('video/')){ vid.src=state.uploadedURL; vid.style.display='block'; img.style.display='none'; }
+  else { img.src=state.uploadedURL; img.style.display='block'; vid.style.display='none'; addToTimeline(file); }
+  updateProjectMedia(file);
+  renderTool(state.activeTool);
+}
+
+function handleRpUpload(input, tool) {
+  const file = input.files[0]; if(!file) return;
+  state.uploadedFile = file;
+  state.uploadedURL  = URL.createObjectURL(file);
+  document.getElementById('preview-media').src = state.uploadedURL;
+  document.getElementById('preview-media').style.display = 'block';
+  document.getElementById('canvasPlaceholder').style.display = 'none';
+  renderTool(tool);
+}
+
+function handleFsUpload(input, side) {
+  const file = input.files[0]; if(!file) return;
+  const url  = URL.createObjectURL(file);
+  if(side==='source'){ state.faceSourceFile=file; const p=document.getElementById('fs-src-preview'); if(p){p.src=url;p.style.display='block';p.nextElementSibling.style.display='none';p.nextElementSibling.nextElementSibling.style.display='none';} }
+  else { state.faceTargetFile=file; const p=document.getElementById('fs-tgt-preview'); if(p){p.src=url;p.style.display='block';p.nextElementSibling.style.display='none';p.nextElementSibling.nextElementSibling.style.display='none';} }
+}
+
+function updateProjectMedia(file){
+  const el = document.getElementById('projectMediaList');
+  if(el) el.innerHTML=`<div style="font-size:10px;font-weight:600;color:var(--text2);padding:4px 0">📎 ${file.name}</div><div style="font-size:9px;color:var(--text3)">${(file.size/1024).toFixed(0)} KB</div>`;
+}
+
+// ─── Generate ─────────────────────────────────────────────────────────────────
+async function generate() {
+  const tool = state.activeTool;
+  if(tool==='settings') return;
+
+  // Validation
+  if(tool==='faceswap'){
+    if(!state.faceSourceFile||!state.faceTargetFile) return alert('Upload both source face and target photo.');
+  } else {
+    if(!state.uploadedFile) return alert('Upload a photo first.');
+  }
+
+  const btn  = document.getElementById('genBtn');
+  const pw   = document.getElementById('progWrap');
+  const ra   = document.getElementById('resultArea');
+  const pf   = document.getElementById('progFill');
+  const pl   = document.getElementById('progLabel');
+  const ps   = document.getElementById('progStep');
+  btn.disabled=true; pw.style.display='block'; ra.style.display='none'; pf.style.width='0%';
+
+  const steps = [[15,'Analyzing image...','Detecting properties'],
+    [35,'Running AI pipeline...','Processing with local engine'],
+    [60,'Applying effects...','Rendering output'],
+    [82,'Encoding output...','Optimizing file'],
+    [95,'Finalizing...','Almost done']];
+  let si=0; const iv=setInterval(()=>{ if(si<steps.length){pf.style.width=steps[si][0]+'%';pl.textContent=steps[si][1];ps.textContent=steps[si][2];si++;} },800);
+
+  try {
+    let blob;
+    if(tool==='faceswap'){
+      const fd=new FormData(); fd.append('source',state.faceSourceFile); fd.append('target',state.faceTargetFile);
+      const r=await fetch('http://localhost:7474/faceswap',{method:'POST',body:fd});
+      if(!r.ok) throw new Error(await r.text());
+      blob=await r.blob(); state.resultMime='image/jpeg';
+    } else {
+      const fd=new FormData(); fd.append('photo',state.uploadedFile);
+      let endpoint='';
+      if(tool==='animator'){
+        endpoint='/animate';
+        fd.append('style',  state.selectedStyle);
+        fd.append('duration',document.getElementById('durSlider')?.value||'8');
+        fd.append('quality', document.getElementById('qualSel')?.value||'medium');
+        fd.append('format',  document.getElementById('fmtSel')?.value||'mp4');
+        fd.append('grade',   document.getElementById('tog-grade')?.classList.contains('on')?'1':'0');
+        fd.append('vignette',document.getElementById('tog-vig')?.classList.contains('on')?'1':'0');
+        fd.append('grain',   document.getElementById('tog-grain')?.classList.contains('on')?'1':'0');
+        fd.append('sharpen', document.getElementById('tog-sharp')?.classList.contains('on')?'1':'0');
+        state.resultMime='video/mp4';
+      } else if(tool==='magazine'){
+        endpoint='/magazine'; fd.append('template',state.selectedMagTemplate); state.resultMime='image/jpeg';
+      } else if(tool==='bgswap'){
+        endpoint='/bgswap'; fd.append('background',state.selectedBg); state.resultMime='image/jpeg';
+      } else if(tool==='retouch'){
+        endpoint='/retouch'; fd.append('intensity',state.selectedIntensity); state.resultMime='image/jpeg';
+      } else if(tool==='grade'){
+        endpoint='/grade'; fd.append('preset',state.selectedGrade); state.resultMime='image/jpeg';
+      } else if(tool==='resize'){
+        endpoint='/resize';
+        fd.append('width',  document.getElementById('resW')?.value||'1920');
+        fd.append('height', document.getElementById('resH')?.value||'1080');
+        fd.append('mode',   document.getElementById('resMode')?.value||'fit');
+        fd.append('format', document.getElementById('resFmt')?.value||'jpg');
+        fd.append('quality',document.getElementById('resQual')?.value||'95');
+        state.resultMime='image/jpeg';
+      }
+      const r=await fetch('http://localhost:7474'+endpoint,{method:'POST',body:fd});
+      if(!r.ok) throw new Error(await r.text());
+      blob=await r.blob();
+    }
+
+    clearInterval(iv); pf.style.width='100%'; pl.textContent='✅ Complete!'; ps.textContent='Ready to download';
+    state.resultURL = URL.createObjectURL(blob);
+
+    setTimeout(()=>{
+      pw.style.display='none'; ra.style.display='block';
+      const rw = document.getElementById('resultWrap');
+      if(state.resultMime==='video/mp4'){
+        rw.innerHTML=`<video src="${state.resultURL}" controls autoplay loop muted style="width:100%;border-radius:8px"></video>`;
+        addToTimeline(null, 'result', state.selectedStyle);
+      } else {
+        rw.innerHTML=`<img src="${state.resultURL}" style="width:100%;border-radius:8px">`;
+        // Update canvas preview
+        const img=document.getElementById('preview-media');
+        img.src=state.resultURL; img.style.display='block';
+        document.getElementById('canvasPlaceholder').style.display='none';
+      }
+    },600);
+  } catch(e) {
+    clearInterval(iv); pl.textContent='❌ '+e.message; ps.textContent='Check server'; pf.style.background='var(--red)';
+  }
+  btn.disabled=false;
+}
+
+function dlResult() {
+  if(!state.resultURL) return;
+  const ext = state.resultMime==='video/mp4' ? '.mp4' : '.jpg';
+  const a=document.createElement('a'); a.href=state.resultURL; a.download=`animai-${state.activeTool}-${Date.now()}${ext}`; a.click();
+}
+
+// ─── Canvas ratio ─────────────────────────────────────────────────────────────
+function setRatio(ratio, el) {
+  document.querySelectorAll('.pt-ratio').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  const f = document.getElementById('canvasFrame');
+  const [rw,rh] = ratio.split(':').map(Number);
+  const stageH = document.getElementById('previewStage').clientHeight - 40;
+  const stageW = document.getElementById('previewStage').clientWidth  - 40;
+  const byH = stageH * rw/rh; const byW = stageW;
+  let w,h;
+  if(byH <= stageW){ w=Math.round(byH); h=stageH; }
+  else { w=stageW; h=Math.round(stageW*rh/rw); }
+  f.style.width=w+'px'; f.style.height=h+'px';
+}
+
+function fitCanvas() {
+  const el = document.querySelector('.pt-ratio.active');
+  if(el) setRatio(el.textContent, el);
+}
+
+// ─── Timeline ─────────────────────────────────────────────────────────────────
+function buildRuler() {
+  const ruler = document.getElementById('rulerMarks');
+  ruler.innerHTML = '';
+  for(let i=0;i<=30;i+=5){
+    const el=document.createElement('div'); el.className='tl-mark';
+    el.textContent=`${i}s`; ruler.appendChild(el);
+  }
+}
+
+function addToTimeline(file, type='media', label='') {
+  const tv = document.getElementById('trackVideo');
+  const ta = document.getElementById('trackAudio');
+  const tf = document.getElementById('trackFx');
+  const name = file ? file.name.split('.')[0].slice(0,14) : label;
+  const w = 120+Math.random()*80;
+  const left = tv.querySelectorAll('.tl-clip').length * 10;
+  const clip = document.createElement('div');
+  clip.className='tl-clip tl-clip-v';
+  clip.style.left=left+'px'; clip.style.width=w+'px';
+  clip.textContent=name; tv.appendChild(clip);
+  // FX clip
+  const fxClip = document.createElement('div');
+  fxClip.className='tl-clip tl-clip-fx';
+  fxClip.style.left=(left+5)+'px'; fxClip.style.width=(w-10)+'px';
+  fxClip.textContent=label||'fx'; tf.appendChild(fxClip);
+}
+
+// ─── Transport ────────────────────────────────────────────────────────────────
+let playInterval = null;
+function togglePlay(){
+  state.playing=!state.playing;
+  const b1=document.getElementById('playBtn'), b2=document.getElementById('pcPlayBtn');
+  const icon=state.playing?'⏸':'▶';
+  b1.textContent=icon; b2.textContent=icon;
+  if(state.playing){ b1.classList.add('play'); b2.classList.add('play'); }
+  else { b1.classList.remove('play'); b2.classList.remove('play'); }
+  const vid=document.getElementById('preview-video');
+  if(vid.src){ state.playing?vid.play():vid.pause(); }
+  if(state.playing){
+    playInterval=setInterval(()=>{ state.currentTime=Math.min(state.currentTime+0.1,state.duration||8); updateTimecode(); if(state.currentTime>=(state.duration||8)){state.currentTime=0;} }, 100);
+  } else {
+    clearInterval(playInterval);
+  }
+}
+function skipBack(){ state.currentTime=0; updateTimecode(); }
+function skipFwd(){ state.currentTime=state.duration||8; updateTimecode(); }
+function stepBack(){ state.currentTime=Math.max(0,state.currentTime-1/30); updateTimecode(); }
+function stepFwd(){ state.currentTime=Math.min(state.duration||8,state.currentTime+1/30); updateTimecode(); }
+function updateTimecode(){
+  const t=state.currentTime;
+  const h=Math.floor(t/3600),m=Math.floor(t%3600/60),s=Math.floor(t%60),f=Math.floor((t%1)*30);
+  document.getElementById('timecode').textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  document.getElementById('pcTime').textContent=`${String(m).padStart(1,'0')}:${String(s).padStart(2,'0')} / 0:${String(Math.floor(state.duration||8)).padStart(2,'0')}`;
+  const pct=(state.duration?state.currentTime/state.duration:0)*100;
+  document.getElementById('scrubProgress').style.width=pct+'%';
+  document.getElementById('scrubHandle').style.left=pct+'%';
+  document.getElementById('playhead').style.left=pct+'%';
+}
+function scrub(e){ const r=document.getElementById('scrubber').getBoundingClientRect(); const pct=(e.clientX-r.left)/r.width; state.currentTime=(state.duration||8)*Math.max(0,Math.min(1,pct)); updateTimecode(); }
+function setVol(v){ const vid=document.getElementById('preview-video'); if(vid.src) vid.volume=v/100; }
+
+// ─── Files panel ──────────────────────────────────────────────────────────────
+async function loadFiles(){
+  const grid=document.getElementById('filesGrid');
+  if(!grid) return;
+  try{
+    const r=await fetch('http://localhost:7474/files',{signal:AbortSignal.timeout(3000)});
+    const files=await r.json();
+    if(!files.length){ grid.innerHTML='<div class="empty-state" style="grid-column:span 2"><div class="es-icon">📂</div>No files yet</div>'; return; }
+    grid.innerHTML=files.slice(0,20).map(f=>`
+      <div class="proj-card" onclick="previewFile('${f.url}','${f.type}')">
+        <div class="proj-thumb">
+          ${f.type==='video'
+            ? `<video src="http://localhost:7474${f.url}" muted style="width:100%;height:100%;object-fit:cover"></video>`
+            : `<img src="http://localhost:7474${f.url}" style="width:100%;height:100%;object-fit:cover" loading="lazy">`}
+          <div class="proj-type">${f.type==='video'?'MP4':'IMG'}</div>
+        </div>
+        <div class="proj-info">
+          <div class="pn">${f.name}</div>
+          <div class="ps">${(f.size/1024).toFixed(0)}KB</div>
+        </div>
+      </div>`).join('');
+  }catch(e){grid.innerHTML='<div class="empty-state" style="grid-column:span 2;color:var(--red)">Server offline</div>';}
+}
+
+function previewFile(url, type){
+  const fullUrl='http://localhost:7474'+url;
+  const img=document.getElementById('preview-media');
+  const vid=document.getElementById('preview-video');
+  if(type==='video'){ vid.src=fullUrl; vid.style.display='block'; img.style.display='none'; }
+  else { img.src=fullUrl; img.style.display='block'; vid.style.display='none'; }
+  document.getElementById('canvasPlaceholder').style.display='none';
+  state.resultURL=fullUrl; state.resultMime=type==='video'?'video/mp4':'image/jpeg';
+  // Show result area
+  document.getElementById('resultArea').style.display='block';
+  document.getElementById('resultWrap').innerHTML=type==='video'
+    ?`<video src="${fullUrl}" controls autoplay loop muted style="width:100%;border-radius:8px"></video>`
+    :`<img src="${fullUrl}" style="width:100%;border-radius:8px">`;
+}
+
+// ─── Export ───────────────────────────────────────────────────────────────────
+function exportProject(){ if(state.resultURL){ dlResult(); } else { alert('Generate something first, then export.'); } }
+
+// ─── Server status ────────────────────────────────────────────────────────────
+async function checkServer(){
+  const dot=document.getElementById('serverDot'), txt=document.getElementById('serverText');
+  const sd=document.getElementById('settingsDot');
+  try{
+    const r=await fetch('http://localhost:7474/ping',{signal:AbortSignal.timeout(2000)});
+    if(r.ok){
+      dot.style.background='var(--green)'; txt.textContent='Engine Online';
+      if(sd) sd.style.background='var(--green)';
+    } else throw 0;
+  }catch{
+    dot.style.background='var(--red)'; txt.textContent='Engine Offline';
+    if(sd) sd.style.background='var(--red)';
+  }
+}
+
+// ─── Drag & Drop on stage ────────────────────────────────────────────────────
+const stage=document.getElementById('previewStage');
+stage.addEventListener('dragover',e=>{e.preventDefault();stage.style.background='var(--glow2)'});
+stage.addEventListener('dragleave',()=>{stage.style.background=''});
+stage.addEventListener('drop',e=>{
+  e.preventDefault(); stage.style.background='';
+  const file=e.dataTransfer.files[0];
+  if(file){ const dt=new DataTransfer(); dt.items.add(file); const fi=document.getElementById('canvas-file-input'); fi.files=dt.files; handleMainUpload(fi); }
+});
+
+// init timecode
+updateTimecode();
+</script>
+</body>
+</html>
