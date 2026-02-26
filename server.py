@@ -33,7 +33,72 @@ def get_face_tools():
             INSWAP, providers=["CPUExecutionProvider"])
     return _face_app, _face_swapper
 
-# ─── Animation engine ─────────────────────────────────────────────────────────
+# ─── Video effects engine (applies templates to actual video) ────────────────
+def make_video_animation(src, style, quality, fmt, grade, vignette, grain, sharpen):
+    """Apply cinematic template to a real video — preserves motion + audio."""
+    out = tempfile.mktemp(suffix=".mp4", dir="/tmp")
+
+    size_str = QUALITY_MAP.get(quality, "1280x720")
+    w, h = [int(x) for x in size_str.split("x")]
+    if fmt == "square":     w = h = min(w, h)
+    elif fmt == "vertical": w = int(h * 9 // 16)
+    elif fmt == "youtube":  w, h = 1920, 1080
+    elif fmt == "ytshorts": w, h = 1080, 1920
+    w -= w % 2; h -= h % 2  # H.264 requires even dimensions
+
+    scale = f"scale={w}:{h}:force_original_aspect_ratio=increase,crop={w}:{h}"
+
+    VSTYLES = {
+        "kenburns":    f"{scale},zoompan=z='1.0+0.0003*on':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1",
+        "baywatch":    f"{scale},eq=brightness=0.06:saturation=1.5:contrast=1.12:gamma_r=1.08:gamma_b=0.90",
+        "drift":       f"{scale},crop=iw*0.92:ih:iw*0.04*(t/10):0",
+        "pulse":       f"{scale},eq=saturation=1.2:contrast=1.08",
+        "zoom":        f"{scale},zoompan=z='min(1.0+0.0008*on,1.3)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1",
+        "float":       f"{scale},eq=brightness=0.02:saturation=1.1",
+        "cinema":      f"{scale},eq=contrast=1.15:saturation=0.85:brightness=-0.02",
+        "warmglow":    f"{scale},eq=brightness=0.06:saturation=1.4:gamma_r=1.10:gamma_b=0.90",
+        "glitch":      f"{scale},noise=alls=14:allf=t,hue=s=1.3",
+        "vortex":      f"{scale},hue=h='t*8':s=1.3",
+        "reveal":      f"{scale},eq=contrast=1.08:saturation=1.1",
+        "neon":        f"{scale},hue=s=2.0,eq=contrast=1.25:brightness=0.02",
+        "parallax":    f"{scale},zoompan=z='1.06':x='iw/2-(iw/zoom/2)+iw*0.04*sin(t)':y='ih/2-(ih/zoom/2)':d=1",
+        "matrix":      f"{scale},hue=h=120:s=2.0,eq=contrast=1.3:brightness=-0.06",
+        "bokeh":       f"{scale},unsharp=lx=5:ly=5:la=-0.35,eq=brightness=0.04:saturation=1.1",
+        "holographic": f"{scale},hue=h='t*18':s=1.7",
+        "drone":       f"{scale},zoompan=z='max(1.0,1.25-0.0006*on)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1",
+        "timelapse":   f"{scale},eq=saturation=1.5:contrast=1.2:brightness=0.04",
+        "noir":        f"{scale},eq=contrast=1.65:saturation=0.0:brightness=-0.04",
+        "chromatic":   f"{scale},hue=s=1.5,eq=contrast=1.12",
+        "vhs":         f"{scale},eq=saturation=0.22:contrast=1.12,noise=alls=8:allf=t",
+        "starfield":   f"{scale},zoompan=z='min(1.0+0.0012*on,1.5)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1,eq=brightness=-0.08:contrast=1.4",
+        "firestorm":   f"{scale},eq=brightness=0.10:saturation=1.8:gamma_r=1.3:gamma_b=0.68",
+        "icecrystal":  f"{scale},eq=contrast=1.35:saturation=0.6:gamma_b=1.35",
+        "sunrise":     f"{scale},eq=brightness=0.08:saturation=1.3:gamma_r=1.1",
+        "earthquake":  f"{scale},zoompan=z='1.06':x='iw/2-(iw/zoom/2)+8*sin(t*8)':y='ih/2-(ih/zoom/2)+5*cos(t*9)':d=1",
+        "liquid":      f"{scale},zoompan=z='1.07':x='iw/2-(iw/zoom/2)+14*sin(t*2)':y='ih/2-(ih/zoom/2)+10*cos(t*1.5)':d=1",
+        "tiltshift":   f"{scale},vignette=PI/2.2,eq=contrast=1.05:saturation=0.95",
+        "letterbox":   f"{scale},eq=contrast=1.12:saturation=0.90",
+        "splitreveal": f"{scale},eq=contrast=1.08:saturation=1.12",
+    }
+
+    vf = VSTYLES.get(style, VSTYLES["kenburns"])
+    extras = []
+    if grade   == "1" and "eq=" not in vf: extras.append("eq=contrast=1.08:saturation=1.1")
+    if sharpen == "1": extras.append("unsharp=5:5:0.6:5:5:0")
+    if vignette == "1": extras.append("vignette=PI/3.8")
+    extras.append("format=yuv420p")
+    full_vf = vf + "," + ",".join(extras)
+
+    yt_enc = fmt in ("youtube","ytshorts")
+    enc = ["-b:v","6000k","-maxrate","8000k","-bufsize","16000k","-profile:v","high","-level","4.1"] if yt_enc else ["-crf","20"]
+    cmd = [FFMPEG, "-y", "-i", src,
+           "-vf", full_vf, "-c:v", "libx264", "-preset", "fast"] + enc + [
+           "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", out]
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+    if r.returncode != 0: raise RuntimeError(r.stderr[-800:])
+    return out
+
+# ─── Animation engine (photo → animated video) ───────────────────────────────
 def make_animation(src, style, duration, quality, fmt, grade, vignette, grain, sharpen):
     from PIL import Image
     size_str = QUALITY_MAP.get(quality, "1280x720")
@@ -289,39 +354,26 @@ class Handler(BaseHTTPRequestHandler):
         out    = None
 
         try:
-            # ── Step 1: get a clean JPEG source frame ─────────────────────
             if ext in VIDEO:
-                print(f"  Video detected ({ext}) — extracting frame...")
-                # Try multiple timestamps until we get a good frame
-                for ss in ["0", "1", "2", "0.5"]:
-                    r = subprocess.run(
-                        [FFMPEG, "-y", "-ss", ss, "-i", raw,
-                         "-vframes", "1", "-vf", "scale=iw:ih", src],
-                        capture_output=True, timeout=30
-                    )
-                    if r.returncode == 0 and os.path.exists(src) and os.path.getsize(src) > 500:
-                        print(f"  Frame extracted at {ss}s")
-                        break
-                else:
-                    return self._text(
-                        "Could not extract frame from video.\n"
-                        "Try uploading a photo (JPG/PNG) instead.", 400
-                    )
-                # Clean up via PIL (fix orientation, ensure valid JPEG)
-                img = Image.open(src).convert("RGB")
-                try: img = ImageOps.exif_transpose(img)
-                except: pass
-                img.save(src, "JPEG", quality=95)
+                # ══ VIDEO PATH: apply template directly to video ══════════
+                print(f"  🎬 Video mode ({ext}) — applying {g('style','kenburns')} template...")
+                out = make_video_animation(
+                    raw,
+                    g("style","kenburns"),  g("quality","medium"),
+                    g("format","mp4"),
+                    g("grade","1"),          g("vignette","1"),
+                    g("grain","0"),          g("sharpen","1")
+                )
             else:
-                # ── Image: convert anything PIL can read → JPEG ───────────
+                # ══ PHOTO PATH: decode image → animate as looping video ═══
                 try:
                     img = Image.open(raw).convert("RGB")
                     try: img = ImageOps.exif_transpose(img)
                     except: pass
                     img.save(src, "JPEG", quality=95)
-                    print(f"  Image decoded: {img.size} ({ext})")
+                    print(f"  📸 Photo mode: {img.size} ({ext})")
                 except Exception as e:
-                    # Last resort: try ffmpeg to decode (handles some raw formats)
+                    # Fallback: try ffmpeg decode (raw formats, unusual types)
                     r = subprocess.run(
                         [FFMPEG, "-y", "-i", raw, "-vframes", "1", src],
                         capture_output=True, timeout=30
@@ -329,17 +381,16 @@ class Handler(BaseHTTPRequestHandler):
                     if r.returncode != 0 or not os.path.exists(src) or os.path.getsize(src) < 500:
                         return self._text(
                             f"Cannot read file ({ext}). "
-                            "Please upload a JPG, PNG, WEBP, HEIC, or video file.", 400
+                            "Please upload JPG, PNG, WEBP, HEIC, or a video file.", 400
                         )
+                out = make_animation(
+                    src,
+                    g("style","kenburns"),  g("duration","8"),
+                    g("quality","medium"),   g("format","mp4"),
+                    g("grade","1"),          g("vignette","1"),
+                    g("grain","0"),          g("sharpen","1")
+                )
 
-            # ── Step 2: animate ───────────────────────────────────────────
-            out = make_animation(
-                src,
-                g("style","kenburns"), g("duration","8"),
-                g("quality","medium"),  g("format","mp4"),
-                g("grade","1"),         g("vignette","1"),
-                g("grain","0"),         g("sharpen","1")
-            )
             name = f"anim-{g('style','kb')}-{int(time.time())}.mp4"
             self._persist(out, name)
             with open(out,"rb") as f: data = f.read()
